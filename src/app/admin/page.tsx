@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Memory } from '@/lib/types'
 
+const PERSON_NAME = process.env.NEXT_PUBLIC_PERSON_NAME ?? 'the birthday star'
+
 interface AdminMemory extends Memory {
   signedUrl?: string
 }
@@ -84,7 +86,7 @@ export default function AdminPage() {
     <div className="min-h-screen bg-day-cream p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-          <h1 className="font-display text-4xl text-accent-marigold">🦁 Admin Dashboard</h1>
+          <h1 className="font-display text-4xl text-accent-marigold">🦁 {PERSON_NAME}&apos;s Admin Dashboard</h1>
           <div className="flex gap-3">
             <button onClick={fetchMemories}
               className="px-4 py-2 rounded-xl bg-day-gold/20 text-accent-marigold border border-day-gold/50 hover:bg-day-gold/30 transition-colors text-sm font-semibold">
@@ -92,7 +94,7 @@ export default function AdminPage() {
             </button>
             <button onClick={downloadExport}
               className="px-4 py-2 rounded-xl bg-gradient-to-r from-accent-marigold to-accent-coral text-white font-semibold text-sm shadow-md hover:shadow-lg transition-shadow">
-              📥 Download All (CSV + Photos)
+              📖 Download Memory Book (PDF)
             </button>
           </div>
         </div>

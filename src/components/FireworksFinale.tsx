@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 
+const PERSON_NAME = process.env.NEXT_PUBLIC_PERSON_NAME ?? 'the birthday star'
+
 async function launchFireworks() {
   const confetti = (await import('canvas-confetti')).default
   const duration = 5000
@@ -87,16 +89,11 @@ export default function FireworksFinale() {
       <audio ref={audioRef} src="/finale-song.mp3" preload="none" />
 
       {stars.map(star => (
-        <div key={star.id}
-          className="absolute rounded-full animate-pulse"
+        <div key={star.id} className="absolute rounded-full animate-pulse"
           style={{
-            left: star.left,
-            top: star.top,
-            width: `${star.size}px`,
-            height: `${star.size}px`,
-            background: 'white',
-            opacity: star.opacity,
-            animationDelay: star.delay,
+            left: star.left, top: star.top,
+            width: `${star.size}px`, height: `${star.size}px`,
+            background: 'white', opacity: star.opacity, animationDelay: star.delay,
           }} />
       ))}
 
@@ -108,7 +105,7 @@ export default function FireworksFinale() {
           style={{ textShadow: '0 0 30px rgba(244, 169, 60, 0.5)' }}>
           Thank you for being part of my life 🦁💛
         </p>
-        <p className="mt-6 text-day-peach/80 text-lg">— with love, [YOUR NAME] ♌</p>
+        <p className="mt-6 text-day-peach/80 text-lg">— with love, {PERSON_NAME} ♌</p>
       </div>
 
       <div className="absolute bottom-8 right-8 flex gap-3">

@@ -1,4 +1,9 @@
+const PERSON_NAME = process.env.NEXT_PUBLIC_PERSON_NAME ?? 'the birthday star'
+const PERSON_AGE = process.env.NEXT_PUBLIC_PERSON_AGE ?? ''
+
 export default function AboutSection() {
+  const ageLabel = PERSON_AGE ? `${PERSON_AGE}th ` : ''
+
   return (
     <section className="relative py-20 px-4">
       <div className="max-w-2xl mx-auto">
@@ -19,7 +24,7 @@ export default function AboutSection() {
               If you&apos;ve been graced by a Leo in your life, you already know: they don&apos;t just celebrate birthdays. They throw <em>events</em>. ✨
             </p>
             <p>
-              So here we are — gathered together, near and far, to honor Rawaa and all the sunshine they bring into our world.
+              So here we are — gathered together, near and far, to honor {PERSON_NAME} on their {ageLabel}birthday and all the sunshine they bring into our world.
               Let&apos;s make this one legendary! 🎉🌞
             </p>
           </div>

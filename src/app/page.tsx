@@ -3,13 +3,18 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import NameGateModal from '@/components/NameGateModal'
+import ThankYouSection from '@/components/ThankYouSection'
 import HeroSection from '@/components/HeroSection'
+import MemoryForm from '@/components/MemoryForm'
+import CandleSection from '@/components/CandleSection'
+import CakeCuttingSection from '@/components/CakeCuttingSection'
+import DanceSection from '@/components/DanceSection'
+import ScatteredGifs from '@/components/ScatteredGifs'
+import MemoryWall from '@/components/MemoryWall'
 import WordCloud from '@/components/WordCloud'
 import AboutSection from '@/components/AboutSection'
-import CandleSection from '@/components/CandleSection'
-import MemoryForm from '@/components/MemoryForm'
-import MemoryWall from '@/components/MemoryWall'
 import FireworksFinale from '@/components/FireworksFinale'
+import ClosingGifs from '@/components/ClosingGifs'
 import MusicControl from '@/components/MusicControl'
 import CursorSparkle from '@/components/CursorSparkle'
 
@@ -33,6 +38,7 @@ export default function Home() {
   const [showModal, setShowModal] = useState(true)
   const [bgStyle, setBgStyle] = useState<React.CSSProperties>({})
   const [memoryRefreshTrigger, setMemoryRefreshTrigger] = useState(0)
+  const [candlesBlown, setCandlesBlown] = useState(false)
   const audioRef = useRef<HTMLAudioElement>(null)
 
   const startMusic = useCallback(() => {
@@ -49,12 +55,9 @@ export default function Home() {
       const maxScroll = document.body.scrollHeight - window.innerHeight
       const t = maxScroll > 0 ? Math.min(scrollY / maxScroll, 1) : 0
 
-      const dayColors = ['#FFF9EF', '#FFE9A8', '#FFC7A8']
-      const nightColors = ['#241E3D', '#241E3D', '#4B3B6B']
-
-      const c1 = interpolateColor(dayColors[0], nightColors[0], t)
-      const c2 = interpolateColor(dayColors[1], nightColors[1], t)
-      const c3 = interpolateColor(dayColors[2], nightColors[2], t)
+      const c1 = interpolateColor('#FFF9EF', '#241E3D', t)
+      const c2 = interpolateColor('#FFE9A8', '#241E3D', t)
+      const c3 = interpolateColor('#FFC7A8', '#4B3B6B', t)
 
       setBgStyle({
         background: `linear-gradient(180deg, ${c1} 0%, ${c2} 50%, ${c3} 100%)`,
@@ -85,16 +88,41 @@ export default function Home() {
 
       {!showModal && (
         <>
-          <HeroSection visitorName={visitorName} />
-          <WordCloud />
-          <AboutSection />
-          <CandleSection />
+          {/* 1. Welcome / Thank You */}
+          <ThankYouSection visitorName={visitorName} />
+
+          <ScatteredGifs slot={1} />
+
+          {/* 2. Leave a Memory form */}
           <MemoryForm
             visitorName={visitorName}
             onMemorySubmitted={() => setMemoryRefreshTrigger(prev => prev + 1)}
           />
+
+          <ScatteredGifs slot={2} />
+
+          {/* 3. Blow the candles */}
+          <CandleSection onBlown={() => setCandlesBlown(true)} />
+
+          {/* 4. Cake cutting (after candles blown) */}
+          {candlesBlown && <CakeCuttingSection />}
+
+          {/* 5. Dance floor */}
+          <DanceSection visitorName={visitorName} />
+
+          <ScatteredGifs slot={3} />
+
+          {/* 6. Memory Wall */}
           <MemoryWall refreshTrigger={memoryRefreshTrigger} />
+
+          {/* Compact countdown transition */}
+          <HeroSection visitorName={visitorName} />
+
+          {/* 7. Remaining sections */}
+          <WordCloud />
+          <AboutSection />
           <FireworksFinale />
+          <ClosingGifs />
         </>
       )}
     </main>

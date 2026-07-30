@@ -9,8 +9,17 @@ interface Props {
   refreshTrigger: number
 }
 
+const GIF_DELIMITER = '\n__GIF__:'
+
+function parseMessage(raw: string): { text: string; gifUrl: string | null } {
+  const idx = raw.indexOf(GIF_DELIMITER)
+  if (idx === -1) return { text: raw, gifUrl: null }
+  return { text: raw.slice(0, idx).trim(), gifUrl: raw.slice(idx + GIF_DELIMITER.length).trim() }
+}
+
 function MemoryCard({ memory }: { memory: Memory }) {
   const [signedUrl, setSignedUrl] = useState<string | null>(null)
+  const { text, gifUrl } = parseMessage(memory.message ?? '')
 
   useEffect(() => {
     if (memory.photo_path) {
@@ -27,9 +36,17 @@ function MemoryCard({ memory }: { memory: Memory }) {
   return (
     <div className="rounded-3xl overflow-hidden shadow-lg border border-day-peach/30 hover:shadow-xl transition-shadow duration-300"
       style={{ background: 'linear-gradient(135deg, #FFF9EF 0%, #FFC7A8 100%)' }}>
+      {/* Uploaded photo (signed URL from private bucket) */}
       {signedUrl && (
         <div className="relative w-full h-48">
           <Image src={signedUrl} alt={`Memory from ${memory.name}`} fill className="object-cover" />
+        </div>
+      )}
+      {/* GIF from Tenor */}
+      {gifUrl && !signedUrl && (
+        <div className="w-full bg-black/5 flex items-center justify-center overflow-hidden max-h-52">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={gifUrl} alt="GIF" className="w-full object-contain max-h-52" loading="lazy" />
         </div>
       )}
       <div className="p-5">
@@ -37,7 +54,14 @@ function MemoryCard({ memory }: { memory: Memory }) {
           <h3 className="font-display text-lg text-accent-marigold">{memory.name}</h3>
           <span className="text-xs text-gray-400">{date}</span>
         </div>
-        <p className="text-gray-700 text-sm leading-relaxed">{memory.message}</p>
+        {text && <p className="text-gray-700 text-sm leading-relaxed">{text}</p>}
+        {/* GIF shown below text if there's also a photo above */}
+        {gifUrl && signedUrl && (
+          <div className="mt-3 rounded-xl overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={gifUrl} alt="GIF" className="w-full object-contain max-h-40" loading="lazy" />
+          </div>
+        )}
       </div>
     </div>
   )

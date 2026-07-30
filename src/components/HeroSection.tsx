@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react'
 
+const PERSON_NAME = process.env.NEXT_PUBLIC_PERSON_NAME ?? 'the birthday star'
+const PERSON_AGE = process.env.NEXT_PUBLIC_PERSON_AGE ?? ''
+
 interface Props {
   visitorName: string
 }
@@ -28,6 +31,7 @@ function isBirthday(month: number, day: number) {
 export default function HeroSection({ visitorName }: Props) {
   const [countdown, setCountdown] = useState(getCountdownTo(8, 18))
   const [isToday, setIsToday] = useState(isBirthday(8, 18))
+  const ageLabel = PERSON_AGE ? `${PERSON_AGE}th ` : ''
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -38,38 +42,20 @@ export default function HeroSection({ visitorName }: Props) {
   }, [])
 
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-4 py-20 overflow-hidden">
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <svg width="800" height="800" className="animate-sunburst opacity-10" viewBox="0 0 400 400">
-          {Array.from({ length: 36 }, (_, i) => (
-            <line key={i} x1="200" y1="10" x2="200" y2="0"
-              transform={`rotate(${i * 10}, 200, 200)`}
-              stroke="#F4A93C" strokeWidth="3" strokeLinecap="round" />
-          ))}
-        </svg>
-      </div>
+    <section className="relative py-20 px-4 overflow-hidden">
+      <div className="max-w-2xl mx-auto text-center">
+        <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 shadow-xl border-2 border-accent-marigold/20">
+          <p className="font-display text-2xl md:text-3xl text-day-orange mb-4">
+            {PERSON_NAME}&apos;s {ageLabel}Leo Season Celebration ♌
+          </p>
+          <p className="text-gray-500 mb-6 font-semibold">🎂 August 18th 🎂</p>
 
-      <div className="absolute inset-0 pointer-events-none opacity-30"
-        style={{ background: 'radial-gradient(ellipse at 50% 40%, #FFE9A8 0%, transparent 70%)' }} />
-
-      <div className="relative z-10 animate-fade-in-up">
-        <div className="text-7xl mb-4">♌</div>
-
-        <h1 className="font-display text-4xl md:text-6xl lg:text-7xl text-accent-marigold mb-4 leading-tight drop-shadow-md">
-          Hi {visitorName}! 🦁
-        </h1>
-        <p className="font-display text-2xl md:text-3xl text-day-orange mb-2">
-          Welcome to [YOUR NAME]&apos;s Leo Season Celebration!
-        </p>
-        <p className="text-lg md:text-xl text-gray-600 mb-8">
-          🎂 August 18th 🎂
-        </p>
-
-        <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-6 shadow-xl border-2 border-accent-marigold/20 max-w-lg mx-auto">
           {isToday ? (
             <div className="text-center">
-              <p className="font-display text-3xl text-accent-coral">🎉 It&apos;s my birthday today! 🎂</p>
-              <p className="text-gray-600 mt-2">Today is the day — let&apos;s celebrate! 🦁✨</p>
+              <p className="font-display text-3xl text-accent-coral">🎉 Today is the day! 🎂</p>
+              <p className="text-gray-600 mt-2">
+                It&apos;s {PERSON_NAME}&apos;s birthday — let&apos;s celebrate! 🦁✨
+              </p>
             </div>
           ) : (
             <div>
@@ -92,8 +78,6 @@ export default function HeroSection({ visitorName }: Props) {
             </div>
           )}
         </div>
-
-        <div className="mt-12 animate-bounce text-accent-marigold text-3xl">↓</div>
       </div>
     </section>
   )

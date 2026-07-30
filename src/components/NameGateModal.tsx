@@ -3,6 +3,8 @@
 import { useState, FormEvent } from 'react'
 import { supabase } from '@/lib/supabase'
 
+const PERSON_NAME = process.env.NEXT_PUBLIC_PERSON_NAME ?? 'the birthday star'
+
 interface Props {
   onSubmit: (name: string) => void
 }
@@ -54,7 +56,7 @@ export default function NameGateModal({ onSubmit }: Props) {
           Welcome! 🦁
         </h1>
         <p className="text-center text-gray-600 mb-6 text-sm">
-          You&apos;re invited to celebrate [YOUR NAME]&apos;s Leo season birthday!
+          You&apos;re invited to celebrate {PERSON_NAME}&apos;s Leo season birthday!
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -73,7 +75,7 @@ export default function NameGateModal({ onSubmit }: Props) {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">
-              In one word, describe [YOUR NAME]: 🦁
+              In one word, describe {PERSON_NAME}: 🦁
             </label>
             <input
               type="text"
