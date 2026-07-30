@@ -1,26 +1,86 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@theme {
+  --color-day-yellow: #FFE9A8;
+  --color-day-gold: #F6D486;
+  --color-day-peach: #FFC7A8;
+  --color-day-orange: #FFB08A;
+  --color-day-cream: #FFF9EF;
+  --color-night-purple: #4B3B6B;
+  --color-night-blue: #241E3D;
+  --color-accent-marigold: #F4A93C;
+  --color-accent-coral: #F0654E;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --font-display: var(--font-fredoka), cursive;
+  --font-body: var(--font-nunito), sans-serif;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  --animate-drift: drift 4s ease-in-out infinite;
+  --animate-flicker: flicker 1.5s ease-in-out infinite;
+  --animate-fade-in-up: fadeInUp 0.6s ease-out;
+  --animate-fade-zoom-out: fadeZoomOut 0.4s ease-in forwards;
+  --animate-sunburst: sunburst 20s linear infinite;
+  --animate-smoke-puff: smokePuff 0.8s ease-out forwards;
+  --animate-sparkle: sparkle 0.6s ease-out forwards;
+  --animate-badge-pop: badgePop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+
+  @keyframes drift {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    33% { transform: translateY(-10px) rotate(2deg); }
+    66% { transform: translateY(5px) rotate(-2deg); }
+  }
+  @keyframes flicker {
+    0%, 100% { transform: scaleX(1) scaleY(1); opacity: 1; }
+    25% { transform: scaleX(0.95) scaleY(1.05); opacity: 0.9; }
+    75% { transform: scaleX(1.05) scaleY(0.95); opacity: 0.95; }
+  }
+  @keyframes fadeInUp {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeZoomOut {
+    0% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(0.95); }
+  }
+  @keyframes sunburst {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  @keyframes smokePuff {
+    0% { opacity: 0.8; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-30px) scale(2); }
+  }
+  @keyframes sparkle {
+    0% { opacity: 1; transform: scale(0); }
+    50% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(0.5); }
+  }
+  @keyframes badgePop {
+    0% { opacity: 0; transform: scale(0.5) rotate(-5deg); }
+    60% { transform: scale(1.1) rotate(3deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0deg); }
   }
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-nunito), sans-serif;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #FFF9EF;
+}
+::-webkit-scrollbar-thumb {
+  background: #F4A93C;
+  border-radius: 4px;
+}
+
+.font-display {
+  font-family: var(--font-fredoka), cursive;
 }

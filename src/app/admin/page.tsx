@@ -1,0 +1,167 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import Image from 'next/image'
+import { Memory } from '@/lib/types'
+
+interface AdminMemory extends Memory {
+  signedUrl?: string
+}
+
+export default function AdminPage() {
+  const [authed, setAuthed] = useState(false)
+  const [password, setPassword] = useState('')
+  const [passwordError, setPasswordError] = useState('')
+  const [memories, setMemories] = useState<AdminMemory[]>([])
+  const [loading, setLoading] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (password === process.env.NEXT_PUBLIC_ADMIN_PASSWORD) {
+      setAuthed(true)
+    } else {
+      setPasswordError('Incorrect password 🔒')
+    }
+  }
+
+  const fetchMemories = async () => {
+    setLoading(true)
+    const res = await fetch('/api/admin/memories')
+    const data = await res.json()
+    setMemories(data.memories || [])
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    if (authed) fetchMemories()
+  }, [authed])
+
+  const toggleVisible = async (id: string, current: boolean) => {
+    await fetch(`/api/admin/memories?id=${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_visible: !current }),
+    })
+    setMemories(prev => prev.map(m => m.id === id ? { ...m, is_visible: !current } : m))
+  }
+
+  const deleteMemory = async (id: string) => {
+    await fetch(`/api/admin/memories?id=${id}`, { method: 'DELETE' })
+    setMemories(prev => prev.filter(m => m.id !== id))
+    setDeleteConfirm(null)
+  }
+
+  const downloadExport = () => {
+    window.open('/api/admin/export', '_blank')
+  }
+
+  if (!authed) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-day-cream p-4">
+        <div className="bg-white rounded-3xl shadow-xl p-8 w-full max-w-sm border-2 border-accent-marigold/20">
+          <h1 className="font-display text-3xl text-accent-marigold text-center mb-6">🔐 Admin</h1>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="Enter admin password..."
+              className="w-full px-4 py-3 rounded-2xl border-2 border-day-gold/50 focus:border-accent-marigold focus:outline-none"
+            />
+            {passwordError && <p className="text-accent-coral text-sm text-center">{passwordError}</p>}
+            <button type="submit"
+              className="w-full py-3 rounded-2xl bg-gradient-to-r from-accent-marigold to-accent-coral text-white font-display text-lg">
+              Enter 🦁
+            </button>
+          </form>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-day-cream p-4 md:p-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <h1 className="font-display text-4xl text-accent-marigold">🦁 Admin Dashboard</h1>
+          <div className="flex gap-3">
+            <button onClick={fetchMemories}
+              className="px-4 py-2 rounded-xl bg-day-gold/20 text-accent-marigold border border-day-gold/50 hover:bg-day-gold/30 transition-colors text-sm font-semibold">
+              🔄 Refresh
+            </button>
+            <button onClick={downloadExport}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-accent-marigold to-accent-coral text-white font-semibold text-sm shadow-md hover:shadow-lg transition-shadow">
+              📥 Download All (CSV + Photos)
+            </button>
+          </div>
+        </div>
+
+        <p className="text-gray-600 mb-6">{memories.length} total memories</p>
+
+        {loading ? (
+          <div className="text-center py-20 text-4xl animate-pulse">✨</div>
+        ) : (
+          <div className="space-y-4">
+            {memories.map(memory => (
+              <div key={memory.id}
+                className={`bg-white rounded-2xl p-5 shadow-md border-l-4 ${memory.is_public ? 'border-accent-marigold' : 'border-gray-400'}`}>
+                <div className="flex flex-col md:flex-row md:items-start gap-4">
+                  {memory.signedUrl && (
+                    <div className="flex-shrink-0">
+                      <Image src={memory.signedUrl} alt="Memory photo"
+                        width={120} height={120} className="rounded-xl object-cover w-28 h-28" />
+                    </div>
+                  )}
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${memory.is_public ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                        {memory.is_public ? '🎉 Public' : '🔒 Secret'}
+                      </span>
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${memory.is_visible ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}`}>
+                        {memory.is_visible ? '👁️ Visible' : '🚫 Hidden'}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        {new Date(memory.created_at).toLocaleString()}
+                      </span>
+                    </div>
+                    <p className="font-semibold text-gray-800">{memory.name}</p>
+                    <p className="text-gray-600 text-sm mt-1 whitespace-pre-wrap">{memory.message}</p>
+                  </div>
+
+                  <div className="flex flex-row md:flex-col gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => toggleVisible(memory.id, memory.is_visible)}
+                      className="px-3 py-2 rounded-xl text-xs font-semibold border transition-colors border-blue-200 text-blue-600 hover:bg-blue-50"
+                    >
+                      {memory.is_visible ? '🚫 Hide' : '👁️ Show'}
+                    </button>
+
+                    {deleteConfirm === memory.id ? (
+                      <div className="flex gap-1">
+                        <button onClick={() => deleteMemory(memory.id)}
+                          className="px-3 py-2 rounded-xl text-xs font-semibold bg-red-500 text-white hover:bg-red-600">
+                          Confirm
+                        </button>
+                        <button onClick={() => setDeleteConfirm(null)}
+                          className="px-3 py-2 rounded-xl text-xs font-semibold border border-gray-300 text-gray-600 hover:bg-gray-50">
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button onClick={() => setDeleteConfirm(memory.id)}
+                        className="px-3 py-2 rounded-xl text-xs font-semibold border border-red-200 text-red-500 hover:bg-red-50 transition-colors">
+                        🗑️ Delete
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

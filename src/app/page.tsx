@@ -1,65 +1,102 @@
-import Image from "next/image";
+'use client'
+
+import { useState, useEffect, useRef, useCallback } from 'react'
+import dynamic from 'next/dynamic'
+import NameGateModal from '@/components/NameGateModal'
+import HeroSection from '@/components/HeroSection'
+import WordCloud from '@/components/WordCloud'
+import AboutSection from '@/components/AboutSection'
+import CandleSection from '@/components/CandleSection'
+import MemoryForm from '@/components/MemoryForm'
+import MemoryWall from '@/components/MemoryWall'
+import FireworksFinale from '@/components/FireworksFinale'
+import MusicControl from '@/components/MusicControl'
+import CursorSparkle from '@/components/CursorSparkle'
+
+const ParticlesBackground = dynamic(() => import('@/components/ParticlesBackground'), { ssr: false })
+
+function interpolateColor(hex1: string, hex2: string, t: number): string {
+  const r1 = parseInt(hex1.slice(1, 3), 16)
+  const g1 = parseInt(hex1.slice(3, 5), 16)
+  const b1 = parseInt(hex1.slice(5, 7), 16)
+  const r2 = parseInt(hex2.slice(1, 3), 16)
+  const g2 = parseInt(hex2.slice(3, 5), 16)
+  const b2 = parseInt(hex2.slice(5, 7), 16)
+  const r = Math.round(r1 + (r2 - r1) * t)
+  const g = Math.round(g1 + (g2 - g1) * t)
+  const b = Math.round(b1 + (b2 - b1) * t)
+  return `rgb(${r}, ${g}, ${b})`
+}
 
 export default function Home() {
+  const [visitorName, setVisitorName] = useState('')
+  const [showModal, setShowModal] = useState(true)
+  const [bgStyle, setBgStyle] = useState<React.CSSProperties>({})
+  const [memoryRefreshTrigger, setMemoryRefreshTrigger] = useState(0)
+  const audioRef = useRef<HTMLAudioElement>(null)
+
+  const startMusic = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = 0.4
+      audioRef.current.loop = true
+      audioRef.current.play().catch(() => {})
+    }
+  }, [])
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY
+      const maxScroll = document.body.scrollHeight - window.innerHeight
+      const t = maxScroll > 0 ? Math.min(scrollY / maxScroll, 1) : 0
+
+      const dayColors = ['#FFF9EF', '#FFE9A8', '#FFC7A8']
+      const nightColors = ['#241E3D', '#241E3D', '#4B3B6B']
+
+      const c1 = interpolateColor(dayColors[0], nightColors[0], t)
+      const c2 = interpolateColor(dayColors[1], nightColors[1], t)
+      const c3 = interpolateColor(dayColors[2], nightColors[2], t)
+
+      setBgStyle({
+        background: `linear-gradient(180deg, ${c1} 0%, ${c2} 50%, ${c3} 100%)`,
+        transition: 'background 0.1s ease-out',
+      })
+    }
+
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  const handleModalSubmit = (name: string) => {
+    setVisitorName(name)
+    setShowModal(false)
+    startMusic()
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+    <main className="min-h-screen relative" style={bgStyle}>
+      <ParticlesBackground />
+      <CursorSparkle />
+
+      <audio ref={audioRef} src="/background-music.mp3" preload="none" />
+      <MusicControl audioRef={audioRef} />
+
+      {showModal && <NameGateModal onSubmit={handleModalSubmit} />}
+
+      {!showModal && (
+        <>
+          <HeroSection visitorName={visitorName} />
+          <WordCloud />
+          <AboutSection />
+          <CandleSection />
+          <MemoryForm
+            visitorName={visitorName}
+            onMemorySubmitted={() => setMemoryRefreshTrigger(prev => prev + 1)}
+          />
+          <MemoryWall refreshTrigger={memoryRefreshTrigger} />
+          <FireworksFinale />
+        </>
+      )}
+    </main>
+  )
 }
