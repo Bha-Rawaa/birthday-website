@@ -32,13 +32,16 @@ export default function WordCloud() {
   }, [])
 
   return (
-    <section className="relative py-20 px-4">
+    <section className="relative py-20 px-4" style={{ background: 'transparent' }}>
       <div className="max-w-4xl mx-auto">
-        <h2 className="font-display text-3xl md:text-5xl text-center mb-4" style={{ color: '#F4A93C' }}>
-          In one word, [YOUR NAME] is...
+        <p style={{ fontSize: 11, letterSpacing: '0.3em', color: 'rgba(201,168,76,0.6)', textTransform: 'uppercase', marginBottom: 12, textAlign: 'center' }}>
+          ✦ &nbsp; in their words &nbsp; ✦
+        </p>
+        <h2 style={{ fontSize: 'clamp(24px,4vw,44px)', fontWeight: 700, color: '#E8D5A3', letterSpacing: '-0.02em', textAlign: 'center', marginBottom: 10 }}>
+          In one word, she is...
         </h2>
-        <p className="text-center text-gray-600 mb-12 text-sm">
-          Words from everyone who visited this page ✨
+        <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.35)', marginBottom: 48, fontSize: 14 }}>
+          Words from everyone who visited this page
         </p>
 
         {loading ? (

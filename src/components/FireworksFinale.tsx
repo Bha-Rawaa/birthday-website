@@ -84,7 +84,7 @@ export default function FireworksFinale() {
 
   return (
     <section ref={sectionRef} className="relative min-h-screen flex items-center justify-center overflow-hidden"
-      style={{ background: 'linear-gradient(180deg, #4B3B6B 0%, #241E3D 100%)' }}>
+      style={{ background: 'transparent' }}>
 
       <audio ref={audioRef} src="/finale-song.mp3" preload="none" />
 
@@ -100,10 +100,10 @@ export default function FireworksFinale() {
       <div className={`absolute inset-0 bg-black/20 transition-opacity duration-1000 ${triggered ? 'opacity-100' : 'opacity-0'}`} />
 
       <div className={`relative z-10 text-center px-4 transition-all duration-1000 ${showMessage ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-        <div className="text-6xl mb-6">🦁</div>
+        <div className="text-6xl mb-6"></div>
         <p className="font-display text-3xl md:text-5xl lg:text-6xl text-day-yellow leading-tight max-w-3xl mx-auto"
           style={{ textShadow: '0 0 30px rgba(244, 169, 60, 0.5)' }}>
-          Thank you for being part of my life 🦁💛
+          Thank you for making my birthday a little more special. ❤️ 
         </p>
         <p className="mt-6 text-day-peach/80 text-lg">— with love, {PERSON_NAME} ♌</p>
       </div>

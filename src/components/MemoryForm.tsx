@@ -128,113 +128,109 @@ export default function MemoryForm({ visitorName, onMemorySubmitted }: Props) {
     }
   }
 
+  const inputStyle: React.CSSProperties = {
+    width: '100%', padding: '12px 16px', borderRadius: 10,
+    border: '1px solid rgba(201,168,76,0.2)', background: 'rgba(255,255,255,0.04)',
+    color: '#E8D5A3', fontSize: 15, outline: 'none', boxSizing: 'border-box',
+    fontFamily: 'inherit',
+  }
+
   if (submitted) {
     return (
-      <section className="relative py-20 px-4">
-        <div className="max-w-xl mx-auto text-center">
-          <div className="inline-block relative animate-badge-pop">
-            <svg className="absolute inset-0 w-full h-full animate-sunburst opacity-30" viewBox="0 0 200 200">
-              {Array.from({ length: 24 }, (_, i) => (
-                <line key={i} x1="100" y1="5" x2="100" y2="0"
-                  transform={`rotate(${i * 15}, 100, 100)`}
-                  stroke="#F4A93C" strokeWidth="2" />
-              ))}
-            </svg>
-            <div className="relative bg-gradient-to-br from-accent-marigold to-accent-coral text-white rounded-3xl p-8 shadow-2xl border-4 border-day-gold m-8">
-              <div className="text-6xl mb-3">🦁</div>
-              <p className="font-display text-2xl mb-1">You&apos;re Friend</p>
-              <p className="font-display text-6xl text-day-yellow">#{friendCount}</p>
-              <p className="font-display text-xl mt-2">{name} ✨</p>
+      <section style={{ position: 'relative', padding: '80px 16px', background: 'transparent' }}>
+        <div style={{ maxWidth: 480, margin: '0 auto', textAlign: 'center' }}>
+          <div style={{ animation: 'mfBadgePop 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards' }}>
+            <div style={{
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(201,168,76,0.2)',
+              borderRadius: 20,
+              padding: '40px 32px',
+              backdropFilter: 'blur(16px)',
+            }}>
+              <div style={{ fontSize: 52, marginBottom: 16 }}>♌</div>
+              <p style={{ fontSize: 11, letterSpacing: '0.2em', color: 'rgba(201,168,76,0.5)', textTransform: 'uppercase', marginBottom: 12 }}>
+                {isPublic ? 'memory added to the wall' : 'message delivered'}
+              </p>
+              <p style={{ fontSize: 34, fontWeight: 700, color: '#E8D5A3', letterSpacing: '-0.02em', marginBottom: 4 }}>
+                {name}
+              </p>
+              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>
+                {PERSON_NAME} will cherish this forever
+              </p>
             </div>
           </div>
-          <div className="mt-6 animate-fade-in-up">
-            {isPublic ? (
-              <div>
-                <p className="font-display text-2xl text-accent-marigold">Your memory is on the wall! 🎉</p>
-                <p className="text-gray-600 mt-2">{PERSON_NAME} will cherish this forever 💛</p>
-              </div>
-            ) : (
-              <div>
-                <p className="font-display text-2xl" style={{ color: '#4B3B6B' }}>Your secret is safe 🔒</p>
-                <p className="text-gray-600 mt-2">Only {PERSON_NAME} will see your heartfelt message 💌</p>
-              </div>
-            )}
-          </div>
         </div>
+        <style>{`
+          @keyframes mfBadgePop {
+            from { opacity: 0; transform: scale(0.9) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+          }
+        `}</style>
       </section>
     )
   }
 
   return (
-    <section className="relative py-20 px-4">
-      {/* Emoji picker portal */}
+    <section style={{ position: 'relative', padding: '80px 16px', background: 'transparent' }}>
       {showEmoji && (
-        <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center p-4 bg-black/30 backdrop-blur-sm"
+        <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
           onClick={e => { if (e.target === e.currentTarget) setShowEmoji(false) }}>
           <div onClick={e => e.stopPropagation()}>
-            <EmojiPicker
-              onEmojiClick={onEmojiClick}
-              autoFocusSearch={false}
-              lazyLoadEmojis
-            />
+            <EmojiPicker onEmojiClick={onEmojiClick} autoFocusSearch={false} lazyLoadEmojis />
           </div>
         </div>
       )}
-
-      {/* GIF picker */}
       {showGif && (
-        <GifPicker
-          onSelect={url => { setGifUrl(url); setShowGif(false) }}
-          onClose={() => setShowGif(false)}
-        />
+        <GifPicker onSelect={url => { setGifUrl(url); setShowGif(false) }} onClose={() => setShowGif(false)} />
       )}
 
-      <div className="max-w-xl mx-auto">
-        <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 shadow-xl border-2 border-day-peach/40">
-          <h2 className="font-display text-3xl md:text-4xl text-accent-marigold text-center mb-2">
-            🎊 Bring the Memories!
-          </h2>
-          <p className="text-center text-gray-600 mb-8 text-sm">
-            Every great party needs great stories — share a memory of us, a wish, or just drop a vibe 🫶
-          </p>
+      <div style={{ maxWidth: 520, margin: '0 auto' }}>
+        <div style={{
+          background: 'rgba(255,255,255,0.03)',
+          backdropFilter: 'blur(16px)',
+          border: '1px solid rgba(201,168,76,0.12)',
+          borderRadius: 18,
+          padding: '2rem 2.5rem',
+          boxShadow: '0 24px 60px rgba(0,0,0,0.4)',
+        }}>
+          <div style={{ textAlign: 'center', marginBottom: 28 }}>
+            <p style={{ fontSize: 11, letterSpacing: '0.25em', color: 'rgba(201,168,76,0.55)', textTransform: 'uppercase', marginBottom: 10 }}>
+              ✦ &nbsp; leave a memory &nbsp; ✦
+            </p>
+            <h2 style={{ fontSize: 28, fontWeight: 700, color: '#E8D5A3', letterSpacing: '-0.02em', marginBottom: 6 }}>
+              Share a Memory
+            </h2>
+            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 14 }}>
+              A wish, a story, or just good vibes
+            </p>
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Name */}
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Your Name</label>
-              <input
-                type="text"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                className="w-full px-4 py-3 rounded-2xl border-2 border-day-gold/50 focus:border-accent-marigold focus:outline-none bg-day-cream/50"
-              />
+              <label style={{ display: 'block', fontSize: 10, letterSpacing: '0.2em', color: 'rgba(201,168,76,0.55)', textTransform: 'uppercase', marginBottom: 8 }}>
+                Your name
+              </label>
+              <input type="text" value={name} onChange={e => setName(e.target.value)} style={inputStyle} />
             </div>
 
-            {/* Message + emoji/gif toolbar */}
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-sm font-semibold text-gray-700">
-                  Your Message or Memory
-                  <span className="ml-2 font-normal text-gray-400">({message.length}/300)</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <label style={{ fontSize: 10, letterSpacing: '0.2em', color: 'rgba(201,168,76,0.55)', textTransform: 'uppercase' }}>
+                  Message &nbsp;<span style={{ opacity: 0.5, fontWeight: 400 }}>({message.length}/300)</span>
                 </label>
-                {/* Toolbar */}
-                <div className="flex gap-1">
-                  <button
-                    type="button"
-                    onClick={() => { setShowEmoji(v => !v); setShowGif(false) }}
-                    title="Add emoji"
-                    className={`px-2.5 py-1.5 rounded-xl text-sm font-semibold transition-all border-2 ${showEmoji ? 'border-accent-marigold bg-accent-marigold/10 text-accent-marigold' : 'border-day-gold/40 text-gray-500 hover:border-accent-marigold/50 hover:text-accent-marigold'}`}
-                  >
-                    😄 Emoji
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setShowGif(true); setShowEmoji(false) }}
-                    title="Add GIF"
-                    className={`px-2.5 py-1.5 rounded-xl text-sm font-semibold transition-all border-2 ${gifUrl ? 'border-accent-marigold bg-accent-marigold/10 text-accent-marigold' : 'border-day-gold/40 text-gray-500 hover:border-accent-marigold/50 hover:text-accent-marigold'}`}
-                  >
-                    🎬 GIF
-                  </button>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button type="button" onClick={() => { setShowEmoji(v => !v); setShowGif(false) }} style={{
+                    padding: '4px 10px', borderRadius: 8,
+                    border: `1px solid ${showEmoji ? 'rgba(201,168,76,0.5)' : 'rgba(255,255,255,0.1)'}`,
+                    background: showEmoji ? 'rgba(201,168,76,0.1)' : 'transparent',
+                    color: showEmoji ? '#C9A84C' : 'rgba(255,255,255,0.4)', fontSize: 11, cursor: 'pointer',
+                  }}>Emoji</button>
+                  <button type="button" onClick={() => { setShowGif(true); setShowEmoji(false) }} style={{
+                    padding: '4px 10px', borderRadius: 8,
+                    border: `1px solid ${gifUrl ? 'rgba(201,168,76,0.5)' : 'rgba(255,255,255,0.1)'}`,
+                    background: gifUrl ? 'rgba(201,168,76,0.1)' : 'transparent',
+                    color: gifUrl ? '#C9A84C' : 'rgba(255,255,255,0.4)', fontSize: 11, cursor: 'pointer',
+                  }}>GIF</button>
                 </div>
               </div>
               <textarea
@@ -243,80 +239,72 @@ export default function MemoryForm({ visitorName, onMemorySubmitted }: Props) {
                 onChange={e => setMessage(e.target.value)}
                 maxLength={300}
                 rows={4}
-                placeholder="Write something heartfelt... 💌"
-                className="w-full px-4 py-3 rounded-2xl border-2 border-day-gold/50 focus:border-accent-marigold focus:outline-none bg-day-cream/50 resize-none"
+                placeholder="Write something heartfelt..."
+                style={{ ...inputStyle, resize: 'none' }}
               />
             </div>
 
-            {/* GIF preview */}
             {gifUrl && (
-              <div className="relative rounded-2xl overflow-hidden border-2 border-accent-marigold/30 bg-day-cream/30">
+              <div style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(201,168,76,0.2)' }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={gifUrl} alt="Selected GIF" className="w-full max-h-52 object-contain" />
-                <button
-                  type="button"
-                  onClick={() => setGifUrl(null)}
-                  className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full bg-black/50 text-white text-sm hover:bg-black/70 transition-colors"
-                >
-                  ✕
-                </button>
-                <div className="absolute bottom-2 left-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowGif(true)}
-                    className="px-3 py-1 rounded-xl bg-black/50 text-white text-xs hover:bg-black/70 transition-colors"
-                  >
-                    🔄 Change GIF
-                  </button>
-                </div>
+                <img src={gifUrl} alt="Selected GIF" style={{ width: '100%', maxHeight: 200, objectFit: 'contain', display: 'block' }} />
+                <button type="button" onClick={() => setGifUrl(null)} style={{
+                  position: 'absolute', top: 8, right: 8, width: 26, height: 26, borderRadius: '50%',
+                  background: 'rgba(0,0,0,0.7)', border: 'none', color: 'white', fontSize: 12, cursor: 'pointer',
+                }}>✕</button>
               </div>
             )}
 
-            {/* Photo upload */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Add a Photo (optional, max 5MB)</label>
-              <div
-                onClick={() => fileRef.current?.click()}
-                className="flex items-center gap-3 px-4 py-3 rounded-2xl border-2 border-dashed border-day-gold/50 hover:border-accent-marigold cursor-pointer transition-colors bg-day-cream/30"
-              >
-                <span className="text-2xl">📷</span>
-                <span className="text-gray-600 text-sm">
-                  {photoFile ? photoFile.name : 'Click to upload a photo'}
-                </span>
+              <label style={{ display: 'block', fontSize: 10, letterSpacing: '0.2em', color: 'rgba(201,168,76,0.55)', textTransform: 'uppercase', marginBottom: 8 }}>
+                Photo (optional)
+              </label>
+              <div onClick={() => fileRef.current?.click()} style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: '12px 16px', borderRadius: 10,
+                border: '1px dashed rgba(201,168,76,0.2)',
+                background: 'transparent', cursor: 'pointer',
+                color: 'rgba(255,255,255,0.35)', fontSize: 13, transition: 'border-color 0.2s',
+              }}>
+                <span>📷</span>
+                <span>{photoFile ? photoFile.name : 'Click to upload — max 5MB'}</span>
               </div>
-              <input ref={fileRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+              <input ref={fileRef} type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
             </div>
 
-            {/* Privacy */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Privacy</label>
-              <div className="grid grid-cols-2 gap-3">
-                <button type="button" onClick={() => setIsPublic(true)}
-                  title="Everyone at the party can see it"
-                  className={`p-3 rounded-2xl border-2 text-sm font-semibold transition-all ${isPublic ? 'border-accent-marigold bg-accent-marigold/10 text-accent-marigold' : 'border-gray-200 text-gray-500 hover:border-accent-marigold/50'}`}>
-                  🎉 Show it off at the party!
-                </button>
-                <button type="button" onClick={() => setIsPublic(false)}
-                  title={`Won't show on the party wall — just for ${PERSON_NAME}'s eyes only 👀`}
-                  className={`p-3 rounded-2xl border-2 text-sm font-semibold transition-all ${!isPublic ? 'border-[#4B3B6B] bg-[#4B3B6B]/10 text-[#4B3B6B]' : 'border-gray-200 text-gray-500 hover:border-[#4B3B6B]/30'}`}>
-                  🤫 Just between us
-                </button>
+              <label style={{ display: 'block', fontSize: 10, letterSpacing: '0.2em', color: 'rgba(201,168,76,0.55)', textTransform: 'uppercase', marginBottom: 8 }}>
+                Visibility
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <button type="button" onClick={() => setIsPublic(true)} style={{
+                  padding: '10px', borderRadius: 10, cursor: 'pointer', fontSize: 12, fontWeight: 600,
+                  border: `1px solid ${isPublic ? 'rgba(201,168,76,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                  background: isPublic ? 'rgba(201,168,76,0.1)' : 'transparent',
+                  color: isPublic ? '#C9A84C' : 'rgba(255,255,255,0.35)',
+                  transition: 'all 0.2s',
+                }}>Public — on the wall</button>
+                <button type="button" onClick={() => setIsPublic(false)} style={{
+                  padding: '10px', borderRadius: 10, cursor: 'pointer', fontSize: 12, fontWeight: 600,
+                  border: `1px solid ${!isPublic ? 'rgba(155,127,204,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                  background: !isPublic ? 'rgba(155,127,204,0.1)' : 'transparent',
+                  color: !isPublic ? '#9B7FCC' : 'rgba(255,255,255,0.35)',
+                  transition: 'all 0.2s',
+                }}>Just for {PERSON_NAME}</button>
               </div>
-              {!isPublic && (
-                <p className="mt-2 text-xs text-gray-500 text-center">
-                  Won&apos;t show on the party wall — just for {PERSON_NAME}&apos;s eyes only 👀
-                </p>
-              )}
             </div>
 
-            {error && <p className="text-accent-coral text-sm text-center">{error}</p>}
+            {error && <p style={{ color: '#E8856A', fontSize: 13, textAlign: 'center' }}>{error}</p>}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-accent-marigold to-accent-coral text-white font-display text-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Sending... ✨' : 'Send with Love 💛'}
+            <button type="submit" disabled={loading} style={{
+              marginTop: 8, padding: '14px 0', borderRadius: 10, border: 'none',
+              background: loading ? 'rgba(201,168,76,0.2)' : 'linear-gradient(135deg, #C9A84C 0%, #E8D5A3 50%, #C9A84C 100%)',
+              color: '#0d0820', fontWeight: 700, fontSize: 15, letterSpacing: '0.04em',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              boxShadow: loading ? 'none' : '0 4px 20px rgba(201,168,76,0.2)',
+              transition: 'all 0.2s',
+            }}>
+              {loading ? 'Sending...' : 'Send with love →'}
             </button>
           </form>
         </div>

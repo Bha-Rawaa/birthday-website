@@ -15,7 +15,7 @@ export default function ClosingGifs() {
   return (
     <section
       className="relative py-20 px-4 flex flex-col items-center gap-8 overflow-hidden"
-      style={{ background: 'linear-gradient(180deg, #241E3D 0%, #1a1530 100%)' }}
+      style={{ background: 'transparent' }}
     >
       {stars.map(s => (
         <div
