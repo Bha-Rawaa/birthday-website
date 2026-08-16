@@ -153,7 +153,7 @@ export async function GET() {
     const isPrivate = !mem.is_public
 
     if (isPrivate) {
-      page.drawRectangle({ x: W - 110, y: H - 76, width: 88, height: 18, color: ACCENT, borderRadius: 4 })
+      page.drawRectangle({ x: W - 110, y: H - 76, width: 88, height: 18, color: ACCENT })
       page.drawText('Private', { x: W - 100, y: H - 71, size: 9, font: boldFont, color: WHITE })
     }
 
