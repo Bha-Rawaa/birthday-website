@@ -54,6 +54,15 @@ export default function ThankYouSection({ visitorName }: Props) {
   const tick = useCallback(() => setCountdown(getCountdownTo(8, 18)), [])
   useEffect(() => { const t = setInterval(tick, 1000); return () => clearInterval(t) }, [tick])
 
+  const [personalMessage, setPersonalMessage] = useState<string | null>(null)
+  useEffect(() => {
+    if (!visitorName) return
+    fetch(`/api/guest-message?name=${encodeURIComponent(visitorName)}`)
+      .then(r => r.json())
+      .then(d => setPersonalMessage(d.message ?? null))
+      .catch(() => {})
+  }, [visitorName])
+
   return (
     <section
       className="relative min-h-screen flex flex-col items-center justify-center text-center px-4 py-24 overflow-hidden"
@@ -116,7 +125,7 @@ export default function ThankYouSection({ visitorName }: Props) {
           color: 'rgba(232,213,163,0.55)', letterSpacing: '-0.01em',
           marginBottom: 32,
         }}>
-          {ageLabel}Birthday &nbsp;·&nbsp; Leo Season ♌
+          {ageLabel}Birthday &nbsp;·&nbsp; ♌
         </h2>
 
         {/* Live guest pill */}
@@ -208,15 +217,23 @@ export default function ThankYouSection({ visitorName }: Props) {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 15, lineHeight: 1.75, margin: 0 }}>
-              {visitorName} — thank you for being here. Genuinely. Out of everything you could be doing right now, you chose to show up for me, and that means the world.
-            </p>
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 15, lineHeight: 1.75, margin: 0 }}>
-              I&apos;m {PERSON_NAME} — your host, your Leo ♌, and your biggest fan tonight. This is my {ageLabel}trip around the sun and I refused to let it go by quietly. So I built a whole party. On the internet. For us.
-            </p>
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 15, lineHeight: 1.75, margin: 0 }}>
-              Scroll down and make yourself at home: leave a memory, blow the candles, cut the cake, and hit the dance floor. No dress code, no bedtime, no rules — just good vibes. 🎊
-            </p>
+            {personalMessage ? (
+              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 15, lineHeight: 1.75, margin: 0 }}>
+                {personalMessage}
+              </p>
+            ) : (
+              <>
+                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 15, lineHeight: 1.75, margin: 0 }}>
+                  {visitorName} — thank you for being here. Genuinely. Out of everything you could be doing right now, you chose to show up for me, and that means the world.
+                </p>
+                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 15, lineHeight: 1.75, margin: 0 }}>
+                  This is my {ageLabel}trip around the sun and I refused to let it go by quietly. So I built a whole party. On the internet. For us.
+                </p>
+                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 15, lineHeight: 1.75, margin: 0 }}>
+                  Scroll down and make yourself at home: leave a memory, blow the candles, cut the cake, and hit the dance floor. No dress code, no bedtime, no rules — just good vibes. 🎊
+                </p>
+              </>
+            )}
           </div>
 
           <p style={{ color: 'rgba(201,168,76,0.5)', fontSize: 13, textAlign: 'right', marginTop: 20, marginBottom: 0, fontStyle: 'italic' }}>

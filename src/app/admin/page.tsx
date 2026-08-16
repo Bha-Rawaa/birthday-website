@@ -17,6 +17,8 @@ export default function AdminPage() {
   const [memories, setMemories] = useState<AdminMemory[]>([])
   const [loading, setLoading] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [visitorCount, setVisitorCount] = useState<number | null>(null)
+  const [recentVisitors, setRecentVisitors] = useState<{ id: string; name: string; entered_at: string }[]>([])
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,8 +37,18 @@ export default function AdminPage() {
     setLoading(false)
   }
 
+  const fetchVisitors = async () => {
+    const res = await fetch('/api/admin/visitors')
+    const data = await res.json()
+    setVisitorCount(data.count ?? 0)
+    setRecentVisitors((data.visitors ?? []).slice(0, 10))
+  }
+
   useEffect(() => {
-    if (authed) fetchMemories()
+    if (authed) {
+      fetchMemories()
+      fetchVisitors()
+    }
   }, [authed])
 
   const toggleVisible = async (id: string, current: boolean) => {
@@ -88,7 +100,7 @@ export default function AdminPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <h1 className="font-display text-4xl text-accent-marigold">🦁 {PERSON_NAME}&apos;s Admin Dashboard</h1>
           <div className="flex gap-3">
-            <button onClick={fetchMemories}
+            <button onClick={() => { fetchMemories(); fetchVisitors() }}
               className="px-4 py-2 rounded-xl bg-day-gold/20 text-accent-marigold border border-day-gold/50 hover:bg-day-gold/30 transition-colors text-sm font-semibold">
               🔄 Refresh
             </button>
@@ -98,6 +110,43 @@ export default function AdminPage() {
             </button>
           </div>
         </div>
+
+        {/* Stats row */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+          <div className="bg-white rounded-2xl p-5 shadow-md border border-day-gold/20 text-center">
+            <p className="text-4xl font-bold text-accent-marigold">{visitorCount ?? '…'}</p>
+            <p className="text-sm text-gray-500 mt-1">👤 Guests who entered</p>
+          </div>
+          <div className="bg-white rounded-2xl p-5 shadow-md border border-day-gold/20 text-center">
+            <p className="text-4xl font-bold text-accent-marigold">{memories.length}</p>
+            <p className="text-sm text-gray-500 mt-1">💌 Memories left</p>
+          </div>
+          <div className="bg-white rounded-2xl p-5 shadow-md border border-day-gold/20 text-center col-span-2 md:col-span-1">
+            <p className="text-4xl font-bold text-accent-marigold">
+              {visitorCount !== null && memories.length > 0
+                ? `${Math.round((memories.length / visitorCount) * 100)}%`
+                : '…'}
+            </p>
+            <p className="text-sm text-gray-500 mt-1">📊 Left a memory</p>
+          </div>
+        </div>
+
+        {/* Recent visitors */}
+        {recentVisitors.length > 0 && (
+          <div className="bg-white rounded-2xl p-5 shadow-md border border-day-gold/20 mb-8">
+            <h2 className="font-semibold text-accent-marigold mb-4">🎉 Recent guests (last 10)</h2>
+            <div className="flex flex-wrap gap-2">
+              {recentVisitors.map(v => (
+                <span key={v.id} className="px-3 py-1 rounded-full bg-day-gold/10 text-accent-marigold text-sm border border-day-gold/20">
+                  {v.name}
+                  <span className="text-gray-400 text-xs ml-2">
+                    {new Date(v.entered_at).toLocaleString()}
+                  </span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         <p className="text-gray-600 mb-6">{memories.length} total memories</p>
 

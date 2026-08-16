@@ -59,7 +59,10 @@ export default function NameGateModal({ onSubmit }: Props) {
     setError('')
 
     try {
-      await supabase.from('one_word_tags').insert({ word: word.trim().toLowerCase() })
+      await Promise.all([
+        supabase.from('one_word_tags').insert({ word: word.trim().toLowerCase() }),
+        supabase.from('visitors').insert({ name: name.trim() }),
+      ])
       setPhase('celebrating')
       launchCelebrationFireworks()
       audioRef.current?.play().catch(() => {})
@@ -147,7 +150,7 @@ export default function NameGateModal({ onSubmit }: Props) {
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
               <label style={{ display: 'block', fontSize: 10, letterSpacing: '0.2em', color: 'rgba(201,168,76,0.6)', textTransform: 'uppercase', marginBottom: 8 }}>
-                Your name
+                Your name (to check whether you&apos;re on the guest list 😉)
               </label>
               <input
                 type="text"
@@ -164,7 +167,7 @@ export default function NameGateModal({ onSubmit }: Props) {
 
             <div>
               <label style={{ display: 'block', fontSize: 10, letterSpacing: '0.2em', color: 'rgba(201,168,76,0.6)', textTransform: 'uppercase', marginBottom: 8 }}>
-                One word to describe {PERSON_NAME}
+                Leave one word that reminds you of {PERSON_NAME} 
               </label>
               <input
                 type="text"

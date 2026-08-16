@@ -47,6 +47,7 @@ export default function MemoryForm({ visitorName, onMemorySubmitted }: Props) {
   const [friendCount, setFriendCount] = useState(0)
   const [showEmoji, setShowEmoji] = useState(false)
   const [showGif, setShowGif] = useState(false)
+  const [hoverSecret, setHoverSecret] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -184,6 +185,12 @@ export default function MemoryForm({ visitorName, onMemorySubmitted }: Props) {
         <GifPicker onSelect={url => { setGifUrl(url); setShowGif(false) }} onClose={() => setShowGif(false)} />
       )}
 
+      <style>{`
+        @keyframes tooltipFade {
+          from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+          to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+      `}</style>
       <div style={{ maxWidth: 520, margin: '0 auto' }}>
         <div style={{
           background: 'rgba(255,255,255,0.03)',
@@ -284,13 +291,50 @@ export default function MemoryForm({ visitorName, onMemorySubmitted }: Props) {
                   color: isPublic ? '#C9A84C' : 'rgba(255,255,255,0.35)',
                   transition: 'all 0.2s',
                 }}>Public — on the wall</button>
-                <button type="button" onClick={() => setIsPublic(false)} style={{
-                  padding: '10px', borderRadius: 10, cursor: 'pointer', fontSize: 12, fontWeight: 600,
-                  border: `1px solid ${!isPublic ? 'rgba(155,127,204,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                  background: !isPublic ? 'rgba(155,127,204,0.1)' : 'transparent',
-                  color: !isPublic ? '#9B7FCC' : 'rgba(255,255,255,0.35)',
-                  transition: 'all 0.2s',
-                }}>Just for {PERSON_NAME}</button>
+                <div style={{ position: 'relative' }}>
+                  <button
+                    type="button"
+                    onClick={() => setIsPublic(false)}
+                    onMouseEnter={() => setHoverSecret(true)}
+                    onMouseLeave={() => setHoverSecret(false)}
+                    style={{
+                      width: '100%', padding: '10px', borderRadius: 10, cursor: 'pointer', fontSize: 12, fontWeight: 700,
+                      border: `1px solid ${!isPublic ? 'rgba(155,127,204,0.7)' : 'rgba(155,127,204,0.35)'}`,
+                      background: !isPublic
+                        ? 'rgba(155,127,204,0.2)'
+                        : 'linear-gradient(135deg, rgba(155,127,204,0.12) 0%, rgba(155,127,204,0.06) 100%)',
+                      color: !isPublic ? '#b89fe0' : '#9B7FCC',
+                      boxShadow: !isPublic ? '0 0 14px rgba(155,127,204,0.25)' : '0 0 8px rgba(155,127,204,0.1)',
+                      transition: 'all 0.2s',
+                    }}
+                  >🤫 Just for {PERSON_NAME}</button>
+
+                  {hoverSecret && (
+                    <div style={{
+                      position: 'absolute', bottom: 'calc(100% + 10px)', left: '50%',
+                      transform: 'translateX(-50%)',
+                      background: 'rgba(20,12,48,0.97)',
+                      border: '1px solid rgba(155,127,204,0.35)',
+                      borderRadius: 10, padding: '10px 16px',
+                      fontSize: 12, lineHeight: 1.6,
+                      color: 'rgba(232,213,163,0.9)',
+                      whiteSpace: 'nowrap',
+                      pointerEvents: 'none',
+                      zIndex: 10,
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                      animation: 'tooltipFade 0.15s ease-out',
+                    }}>
+                      In case you want to keep it just between us —<br />
+                      it&apos;s not going to be shared on the wall 🤍
+                      <div style={{
+                        position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)',
+                        width: 0, height: 0,
+                        borderLeft: '6px solid transparent', borderRight: '6px solid transparent',
+                        borderTop: '6px solid rgba(155,127,204,0.35)',
+                      }} />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
