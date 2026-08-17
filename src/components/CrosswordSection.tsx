@@ -134,6 +134,7 @@ export default function CrosswordSection({ visitorName }: Props) {
   const startTimeRef = useRef<number | null>(null)
   const hiddenInputRef = useRef<HTMLInputElement>(null)
   const submittedRef = useRef(false)
+  const restoredGridRef = useRef<string[][] | null>(null)
 
   // ── Build maps from puzzle ────────────────────────────────────────
   useEffect(() => {
@@ -162,7 +163,13 @@ export default function CrosswordSection({ visitorName }: Props) {
       }
       g.push(row)
     }
-    setGrid(g)
+    // Override with saved grid if restoring
+    if (restoredGridRef.current) {
+      setGrid(restoredGridRef.current)
+      restoredGridRef.current = null
+    } else {
+      setGrid(g)
+    }
     // Select first white cell in first across clue
     const first = puzzle.clues.across[0] ?? puzzle.clues.down[0]
     if (first) {
@@ -181,6 +188,53 @@ export default function CrosswordSection({ visitorName }: Props) {
     }, 1000)
     return () => clearInterval(iv)
   }, [phase])
+
+  // ── Save grid to localStorage on change ──────────────────────────
+  useEffect(() => {
+    if (!puzzle || phase !== 'playing' || grid.length === 0) return
+    try {
+      localStorage.setItem(`cw-grid-${puzzle.attemptId}`, JSON.stringify(grid))
+    } catch {}
+  }, [grid, puzzle, phase])
+
+  // ── Restore in-progress puzzle on mount ──────────────────────────
+  useEffect(() => {
+    if (!visitorName) return
+    const sessionKey = `cw-session-${visitorName}`
+    let saved: { attemptId: string; hints: HintCell[]; elapsedOffset: number } | null = null
+    try {
+      const raw = localStorage.getItem(sessionKey)
+      if (raw) saved = JSON.parse(raw)
+    } catch {}
+    if (!saved) return
+
+    const { attemptId, hints, elapsedOffset } = saved
+    ;(async () => {
+      try {
+        const res = await fetch(`/api/crossword/resume?attemptId=${attemptId}`)
+        const data = await res.json()
+        if (!res.ok || data.error || data.status === 'completed') {
+          localStorage.removeItem(sessionKey)
+          localStorage.removeItem(`cw-grid-${attemptId}`)
+          return
+        }
+        // Restore saved grid
+        try {
+          const rawGrid = localStorage.getItem(`cw-grid-${attemptId}`)
+          if (rawGrid) restoredGridRef.current = JSON.parse(rawGrid)
+        } catch {}
+
+        const elapsedSoFar: number = data.elapsedSoFar ?? 0
+        startTimeRef.current = Date.now() - (elapsedSoFar + elapsedOffset) * 1000
+        submittedRef.current = false
+        setElapsed(elapsedSoFar + elapsedOffset)
+        setWrongCells(new Set())
+        setPuzzle({ ...data, hints })
+        setPhase('playing')
+      } catch {}
+    })()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visitorName])
 
   // ── Start puzzle ──────────────────────────────────────────────────
   const startPuzzle = useCallback(async () => {
@@ -202,7 +256,17 @@ export default function CrosswordSection({ visitorName }: Props) {
         setPhase('error')
         return
       }
-      setPuzzle(data as PuzzleData)
+      const puzzleData = data as PuzzleData
+      // Save session for refresh restoration
+      try {
+        localStorage.setItem(`cw-session-${visitorName}`, JSON.stringify({
+          attemptId: puzzleData.attemptId,
+          hints: puzzleData.hints,
+          elapsedOffset: 0,
+        }))
+        localStorage.removeItem(`cw-grid-${puzzleData.attemptId}`)
+      } catch {}
+      setPuzzle(puzzleData)
       setPhase('playing')
     } catch {
       setErrorMsg('Network error')
@@ -212,16 +276,8 @@ export default function CrosswordSection({ visitorName }: Props) {
 
   // ── Reset on name change ──────────────────────────────────────────
   useEffect(() => {
-    setPhase('intro')
-    setPuzzle(null)
-    setGrid([])
-    setSelected(null)
-    setHintMap(new Map())
-    setSecretNote('')
-    setFinalScore(0)
-    setFinalTime(0)
-    startTimeRef.current = null
-    setElapsed(0)
+    // Don't reset — restore effect below will handle it if there's a saved session
+    // This runs on first mount too, so we check if restore effect already ran
   }, [visitorName])
 
   // ── Compute active word (cells belonging to selected clue) ────────
@@ -475,6 +531,11 @@ export default function CrosswordSection({ visitorName }: Props) {
       })
       const data = await res.json()
       if (data.success) {
+        // Clear saved progress
+        try {
+          localStorage.removeItem(`cw-session-${visitorName}`)
+          if (puzzle) localStorage.removeItem(`cw-grid-${puzzle.attemptId}`)
+        } catch {}
         setFinalScore(data.score ?? 0)
         setFinalTime(data.elapsed_seconds ?? elapsed)
         setSecretNote(data.secretNote ?? 'You solved it! 🎉')

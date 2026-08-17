@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Memory } from '@/lib/types'
 
@@ -82,6 +82,8 @@ export default function AdminPage() {
 
   // Crossword state
   const [crosswordAttempts, setCrosswordAttempts] = useState<CrosswordAttempt[]>([])
+  const [expandedCrossword, setExpandedCrossword] = useState<string | null>(null)
+  const [crosswordDetails, setCrosswordDetails] = useState<Record<string, {wordNumber: number; direction: string; correctAnswer: string; submittedAnswer: string}[]>>({})
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
@@ -117,6 +119,17 @@ export default function AdminPage() {
     const res = await fetch('/api/admin/quiz/questions')
     const data = await res.json()
     setQuizQuestions(data.questions || [])
+  }
+
+  const loadCrosswordDetails = async (id: string) => {
+    if (crosswordDetails[id]) {
+      setExpandedCrossword(expandedCrossword === id ? null : id)
+      return
+    }
+    const res = await fetch(`/api/admin/crossword/attempt?id=${id}`)
+    const data = await res.json()
+    setCrosswordDetails(prev => ({ ...prev, [id]: data.wrongWords || [] }))
+    setExpandedCrossword(id)
   }
 
   const fetchCrosswordAttempts = async () => {
@@ -371,9 +384,8 @@ export default function AdminPage() {
                 </thead>
                 <tbody>
                   {quizAttempts.map(attempt => (
-                    <>
+                    <React.Fragment key={attempt.id}>
                       <tr
-                        key={attempt.id}
                         className="border-t border-gray-100 hover:bg-gray-50 cursor-pointer"
                         onClick={() => loadAttemptDetails(attempt.id)}
                       >
@@ -399,34 +411,34 @@ export default function AdminPage() {
                         </td>
                       </tr>
                       {expandedAttempt === attempt.id && attemptDetails[attempt.id] && (
-                        <tr key={`${attempt.id}-detail`}>
+                        <tr>
                           <td colSpan={8} className="bg-gray-50 px-4 py-4">
-                            <table className="w-full text-xs">
-                              <thead>
-                                <tr className="text-gray-400 uppercase tracking-wider">
-                                  <th className="text-left pb-2">Question</th>
-                                  <th className="text-left pb-2">Guest Answer</th>
-                                  <th className="text-left pb-2">Correct Answer</th>
-                                  <th className="text-left pb-2">Result</th>
-                                  <th className="text-left pb-2">Pts</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {attemptDetails[attempt.id].map(ans => (
-                                  <tr key={ans.id} className="border-t border-gray-200">
-                                    <td className="py-2 pr-4 text-gray-700 max-w-xs">{ans.quiz_questions?.question ?? '—'}</td>
-                                    <td className="py-2 pr-4 text-gray-600">{ans.selected_answer}</td>
-                                    <td className="py-2 pr-4 text-gray-500">{ans.quiz_questions?.correct_answer ?? '—'}</td>
-                                    <td className="py-2 pr-4">{ans.is_correct ? '✅' : '❌'}</td>
-                                    <td className="py-2 font-semibold text-accent-marigold">{ans.points_earned}</td>
+                            {attemptDetails[attempt.id].filter(ans => !ans.is_correct).length === 0 ? (
+                              <p className="text-xs text-green-600 font-semibold">🎉 All answers correct!</p>
+                            ) : (
+                              <table className="w-full text-xs">
+                                <thead>
+                                  <tr className="text-gray-400 uppercase tracking-wider">
+                                    <th className="text-left pb-2">Question</th>
+                                    <th className="text-left pb-2">Guest Answer</th>
+                                    <th className="text-left pb-2">Correct Answer</th>
                                   </tr>
-                                ))}
-                              </tbody>
-                            </table>
+                                </thead>
+                                <tbody>
+                                  {attemptDetails[attempt.id].filter(ans => !ans.is_correct).map(ans => (
+                                    <tr key={ans.id} className="border-t border-gray-200">
+                                      <td className="py-2 pr-4 text-gray-700 max-w-xs">{ans.quiz_questions?.question ?? '—'}</td>
+                                      <td className="py-2 pr-4 text-red-500 font-medium">{ans.selected_answer}</td>
+                                      <td className="py-2 pr-4 text-green-700 font-medium">{ans.quiz_questions?.correct_answer ?? '—'}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            )}
                           </td>
                         </tr>
                       )}
-                    </>
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>
@@ -454,32 +466,71 @@ export default function AdminPage() {
                     <th className="text-left px-4 py-3">Time</th>
                     <th className="text-left px-4 py-3">Score</th>
                     <th className="text-left px-4 py-3">Started</th>
+                    <th className="px-4 py-3"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {crosswordAttempts.map(a => (
-                    <tr key={a.id} className="border-t border-gray-100 hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium text-gray-800">{a.guest_name}</td>
-                      <td className="px-4 py-3 text-gray-600">
-                        <span className="px-2 py-0.5 rounded text-xs bg-purple-100 text-purple-700">{a.tag}</span>
-                      </td>
-                      <td className="px-4 py-3">
-                        {a.status === 'completed' ? (
-                          <span className="px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">✅ Completed</span>
-                        ) : (
-                          <span className="px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">⏳ In progress</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-gray-600">
-                        {a.elapsed_seconds != null
-                          ? `${Math.floor(a.elapsed_seconds / 60).toString().padStart(2, '0')}:${(a.elapsed_seconds % 60).toString().padStart(2, '0')}`
-                          : '—'}
-                      </td>
-                      <td className="px-4 py-3 font-bold text-gray-800">{a.score ?? '—'}</td>
-                      <td className="px-4 py-3 text-gray-400 text-xs">
-                        {new Date(a.started_at).toLocaleString()}
-                      </td>
-                    </tr>
+                    <React.Fragment key={a.id}>
+                      <tr
+                        className="border-t border-gray-100 hover:bg-gray-50 cursor-pointer"
+                        onClick={() => loadCrosswordDetails(a.id)}
+                      >
+                        <td className="px-4 py-3 font-medium text-gray-800">{a.guest_name}</td>
+                        <td className="px-4 py-3 text-gray-600">
+                          <span className="px-2 py-0.5 rounded text-xs bg-purple-100 text-purple-700">{a.tag}</span>
+                        </td>
+                        <td className="px-4 py-3">
+                          {a.status === 'completed' ? (
+                            <span className="px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">✅ Completed</span>
+                          ) : (
+                            <span className="px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">⏳ In progress</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600">
+                          {a.elapsed_seconds != null
+                            ? `${Math.floor(a.elapsed_seconds / 60).toString().padStart(2, '0')}:${(a.elapsed_seconds % 60).toString().padStart(2, '0')}`
+                            : '—'}
+                        </td>
+                        <td className="px-4 py-3 font-bold text-gray-800">{a.score ?? '—'}</td>
+                        <td className="px-4 py-3 text-gray-400 text-xs">
+                          {new Date(a.started_at).toLocaleString()}
+                        </td>
+                        <td className="px-4 py-3 text-gray-400 text-xs">
+                          {expandedCrossword === a.id ? '▲' : '▼'}
+                        </td>
+                      </tr>
+                      {expandedCrossword === a.id && crosswordDetails[a.id] && (
+                        <tr>
+                          <td colSpan={7} className="bg-gray-50 px-4 py-4">
+                            {crosswordDetails[a.id].length === 0 ? (
+                              <p className="text-xs text-gray-500">No wrong answers recorded yet (puzzle not submitted or no mistakes made).</p>
+                            ) : (
+                              <table className="w-full text-xs">
+                                <thead>
+                                  <tr className="text-gray-400 uppercase tracking-wider">
+                                    <th className="text-left pb-2">Word #</th>
+                                    <th className="text-left pb-2">Direction</th>
+                                    <th className="text-left pb-2">Guest Answer</th>
+                                    <th className="text-left pb-2">Correct Answer</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {crosswordDetails[a.id].map((w, i) => (
+                                    <tr key={i} className="border-t border-gray-200">
+                                      <td className="py-2 pr-4 text-gray-700 font-semibold">{w.wordNumber}</td>
+                                      <td className="py-2 pr-4 text-gray-500">{w.direction}</td>
+                                      <td className="py-2 pr-4 text-red-500 font-medium">{w.submittedAnswer || '—'}</td>
+                                      <td className="py-2 pr-4 text-green-700 font-medium">{w.correctAnswer}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            )}
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>

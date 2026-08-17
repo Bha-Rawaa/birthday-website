@@ -61,6 +61,22 @@ export async function POST(req: NextRequest) {
     }
 
     if (wrong.length > 0) {
+      // Store wrong words for admin visibility (best-effort, requires last_wrong_words JSONB column)
+      const wrongDetails = wrong.map(w => {
+        const sw = storedWords.find(s => s.word_number === w.wordNumber && s.direction === w.direction)
+        const submitted = answers.find(a => a.wordNumber === w.wordNumber && a.direction === w.direction)
+        return {
+          wordNumber: w.wordNumber,
+          direction: w.direction,
+          correctAnswer: sw?.answer ?? '',
+          submittedAnswer: (submitted?.answer ?? '').toUpperCase().replace(/[^A-Z]/g, ''),
+        }
+      })
+      await admin
+        .from('crossword_attempts')
+        .update({ last_wrong_words: wrongDetails })
+        .eq('id', attemptId)
+        .then(() => {})
       return NextResponse.json({ success: false, wrong })
     }
 
