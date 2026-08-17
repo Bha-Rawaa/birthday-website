@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Fredoka, Nunito } from 'next/font/google'
+import Footer from '@/components/Footer'
 import './globals.css'
 
 const fredoka = Fredoka({
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${fredoka.variable} ${nunito.variable}`}>
       <body className="font-body bg-day-cream overflow-x-hidden">
         {children}
+        <Footer />
       </body>
     </html>
   )
