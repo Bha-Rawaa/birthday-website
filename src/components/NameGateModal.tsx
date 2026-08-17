@@ -4,10 +4,10 @@ import { useState, FormEvent, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 
 const PERSON_NAME = process.env.NEXT_PUBLIC_PERSON_NAME ?? 'the birthday star'
-const BYPASS_NAME = (process.env.NEXT_PUBLIC_BYPASS_NAME ?? 'admin').toLowerCase()
+const BYPASS_NAME = (process.env.NEXT_PUBLIC_BYPASS_NAME ?? 'secret').toLowerCase()
 
 interface Props {
-  onSubmit: (name: string) => void
+  onSubmit: (name: string, hasMemory: boolean) => void
 }
 
 async function launchCelebrationFireworks() {
@@ -40,6 +40,9 @@ export default function NameGateModal({ onSubmit }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [phase, setPhase] = useState<'form' | 'celebrating' | 'exiting'>('form')
+  const [isReturning, setIsReturning] = useState(false)
+  const [visitCount, setVisitCount] = useState(0)
+  const [hasMemory, setHasMemory] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
@@ -55,26 +58,45 @@ export default function NameGateModal({ onSubmit }: Props) {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!name.trim()) { setError('Please enter your name'); return }
-    if (!isBypass) {
-      if (!word.trim()) { setError('Please enter one word'); return }
-      if (/\s/.test(word.trim())) { setError('Just one word, no spaces'); return }
-    }
 
     setLoading(true)
     setError('')
 
     try {
-      if (!isBypass) {
+      if (isBypass) {
+        setPhase('celebrating')
+        launchCelebrationFireworks()
+        audioRef.current?.play().catch(() => {})
+        setTimeout(() => setPhase('exiting'), 2800)
+        setTimeout(() => onSubmit(name.trim(), false), 3200)
+        return
+      }
+
+      // Check if this guest has visited before
+      const checkRes = await fetch(`/api/check-visitor?name=${encodeURIComponent(name.trim())}`)
+      const { isReturning: returning, visitCount: count, hasMemory: mem } = await checkRes.json()
+
+      if (!returning) {
+        // New visitor — word tag required
+        if (!word.trim()) { setError('Please enter one word'); setLoading(false); return }
+        if (/\s/.test(word.trim())) { setError('Just one word, no spaces'); setLoading(false); return }
         await Promise.all([
           supabase.from('one_word_tags').insert({ word: word.trim().toLowerCase() }),
           supabase.from('visitors').insert({ name: name.trim() }),
         ])
+      } else {
+        // Returning visitor — just log the visit
+        await supabase.from('visitors').insert({ name: name.trim() })
       }
+
+      setIsReturning(returning)
+      setVisitCount(count + 1) // +1 for this visit
+      setHasMemory(mem)
       setPhase('celebrating')
       launchCelebrationFireworks()
       audioRef.current?.play().catch(() => {})
       setTimeout(() => setPhase('exiting'), 2800)
-      setTimeout(() => onSubmit(name.trim()), 3200)
+      setTimeout(() => onSubmit(name.trim(), mem), 3200)
     } catch {
       setError('Something went wrong. Please try again.')
       setLoading(false)
@@ -218,13 +240,15 @@ export default function NameGateModal({ onSubmit }: Props) {
         <div style={{ textAlign: 'center', animation: 'ngFadeUp 0.6s ease-out' }}>
           <div style={{ fontSize: 64, marginBottom: 24, animation: 'ngCelebPulse 1.2s ease-in-out infinite' }}>♌</div>
           <p style={{ fontSize: 11, letterSpacing: '0.3em', color: 'rgba(201,168,76,0.6)', textTransform: 'uppercase', marginBottom: 16 }}>
-            welcome to the party
+            {isReturning ? 'welcome back' : 'welcome to the party'}
           </p>
           <h2 style={{ fontSize: 38, fontWeight: 700, color: '#E8D5A3', letterSpacing: '-0.02em' }}>
             {name} ✨
           </h2>
           <p style={{ marginTop: 12, color: 'rgba(255,255,255,0.35)', fontSize: 15 }}>
-            So glad you&apos;re here
+            {isReturning
+              ? `Visit #${visitCount} — always a pleasure 🥂`
+              : 'So glad you\'re here'}
           </p>
         </div>
       )}

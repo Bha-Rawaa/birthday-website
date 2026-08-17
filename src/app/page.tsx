@@ -22,6 +22,7 @@ const ParticlesBackground = dynamic(() => import('@/components/ParticlesBackgrou
 export default function Home() {
   const [visitorName, setVisitorName] = useState('')
   const [showModal, setShowModal] = useState(true)
+  const [hasMemory, setHasMemory] = useState(false)
   const [memoryRefreshTrigger, setMemoryRefreshTrigger] = useState(0)
   const [candlesBlown, setCandlesBlown] = useState(false)
   const audioRef = useRef<HTMLAudioElement>(null)
@@ -34,8 +35,9 @@ export default function Home() {
     }
   }, [])
 
-  const handleModalSubmit = (name: string) => {
+  const handleModalSubmit = (name: string, alreadyHasMemory: boolean) => {
     setVisitorName(name)
+    setHasMemory(alreadyHasMemory)
     setShowModal(false)
     startMusic()
   }
@@ -56,6 +58,7 @@ export default function Home() {
           <ScatteredGifs slot={1} />
           <MemoryForm
             visitorName={visitorName}
+            hasMemory={hasMemory}
             onMemorySubmitted={() => setMemoryRefreshTrigger(prev => prev + 1)}
           />
           <ScatteredGifs slot={2} />
@@ -69,6 +72,23 @@ export default function Home() {
           <WordCloud />
           <FireworksFinale />
           {/* <ClosingGifs /> */}
+
+          {/* Footer */}
+          <footer style={{
+            textAlign: 'center',
+            padding: '40px 24px 32px',
+            borderTop: '1px solid rgba(201,168,76,0.1)',
+          }}>
+            <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 13, marginBottom: 12, letterSpacing: '0.03em' }}>
+              Loved this experience? Want one just like it for your birthday — or any custom website?
+            </p>
+            <p style={{ color: 'rgba(201,168,76,0.6)', fontSize: 14, fontWeight: 600, marginBottom: 20 }}>
+              DM me — I can handle it in the blink of an eye&nbsp;😉✨
+            </p>
+            <p style={{ color: 'rgba(255,255,255,0.15)', fontSize: 12, letterSpacing: '0.05em' }}>
+              © {new Date().getFullYear()} · Rawaà Bha 🤍
+            </p>
+          </footer>
         </>
       )}
     </main>

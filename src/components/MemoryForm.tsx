@@ -15,6 +15,7 @@ const GIF_DELIMITER = '\n__GIF__:'
 
 interface Props {
   visitorName: string
+  hasMemory?: boolean
   onMemorySubmitted: () => void
 }
 
@@ -35,7 +36,7 @@ function playSendSound() {
   }
 }
 
-export default function MemoryForm({ visitorName, onMemorySubmitted }: Props) {
+export default function MemoryForm({ visitorName, hasMemory = false, onMemorySubmitted }: Props) {
   const [name, setName] = useState(visitorName)
   const [message, setMessage] = useState('')
   const [gifUrl, setGifUrl] = useState<string | null>(null)
@@ -134,6 +135,33 @@ export default function MemoryForm({ visitorName, onMemorySubmitted }: Props) {
     border: '1px solid rgba(201,168,76,0.2)', background: 'rgba(255,255,255,0.04)',
     color: '#E8D5A3', fontSize: 15, outline: 'none', boxSizing: 'border-box',
     fontFamily: 'inherit',
+  }
+
+  if (hasMemory && !submitted) {
+    return (
+      <section style={{ position: 'relative', padding: '80px 16px', background: 'transparent' }}>
+        <div style={{ maxWidth: 480, margin: '0 auto', textAlign: 'center' }}>
+          <div style={{
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(201,168,76,0.2)',
+            borderRadius: 20,
+            padding: '40px 32px',
+            backdropFilter: 'blur(16px)',
+          }}>
+            <div style={{ fontSize: 52, marginBottom: 16 }}>💌</div>
+            <p style={{ fontSize: 11, letterSpacing: '0.2em', color: 'rgba(201,168,76,0.5)', textTransform: 'uppercase', marginBottom: 12 }}>
+              already on the wall
+            </p>
+            <p style={{ fontSize: 26, fontWeight: 700, color: '#E8D5A3', letterSpacing: '-0.02em', marginBottom: 8 }}>
+              You already left a memory!
+            </p>
+            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6 }}>
+              {PERSON_NAME} already has your words — scroll down to see the memory wall ✨
+            </p>
+          </div>
+        </div>
+      </section>
+    )
   }
 
   if (submitted) {
