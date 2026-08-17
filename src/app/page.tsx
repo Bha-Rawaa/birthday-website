@@ -11,6 +11,7 @@ import DanceSection from '@/components/DanceSection'
 import ScatteredGifs from '@/components/ScatteredGifs'
 import MemoryWall from '@/components/MemoryWall'
 import QuizSection from '@/components/QuizSection'
+import CrosswordSection from '@/components/CrosswordSection'
 import WordCloud from '@/components/WordCloud'
 import FireworksFinale from '@/components/FireworksFinale'
 import ClosingGifs from '@/components/ClosingGifs'
@@ -69,6 +70,7 @@ export default function Home() {
           <ScatteredGifs slot={3} />
           <MemoryWall refreshTrigger={memoryRefreshTrigger} />
           <QuizSection visitorName={visitorName} />
+          <CrosswordSection visitorName={visitorName} />
           <WordCloud />
           <FireworksFinale />
           {/* <ClosingGifs /> */}

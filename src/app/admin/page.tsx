@@ -35,6 +35,17 @@ interface AttemptAnswer {
   } | null
 }
 
+interface CrosswordAttempt {
+  id: string
+  guest_name: string
+  tag: string
+  status: string
+  score: number | null
+  elapsed_seconds: number | null
+  started_at: string
+  completed_at: string | null
+}
+
 interface QuizQuestionAdmin {
   id: number
   question: string
@@ -68,6 +79,9 @@ export default function AdminPage() {
     question: '', answers: ['', '', '', ''], correct_answer: '', difficulty: 'easy', points: 1, display_order: 0, is_active: true,
   })
   const [quizDeleteConfirm, setQuizDeleteConfirm] = useState<number | null>(null)
+
+  // Crossword state
+  const [crosswordAttempts, setCrosswordAttempts] = useState<CrosswordAttempt[]>([])
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
@@ -105,12 +119,19 @@ export default function AdminPage() {
     setQuizQuestions(data.questions || [])
   }
 
+  const fetchCrosswordAttempts = async () => {
+    const res = await fetch('/api/admin/crossword')
+    const data = await res.json()
+    setCrosswordAttempts(data.attempts || [])
+  }
+
   useEffect(() => {
     if (authed) {
       fetchMemories()
       fetchVisitors()
       fetchQuizAttempts()
       fetchQuizQuestions()
+      fetchCrosswordAttempts()
     }
   }, [authed])
 
@@ -206,7 +227,7 @@ export default function AdminPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <h1 className="font-display text-4xl text-accent-marigold">🦁 {PERSON_NAME}&apos;s Admin Dashboard</h1>
           <div className="flex gap-3">
-            <button onClick={() => { fetchMemories(); fetchVisitors(); fetchQuizAttempts(); fetchQuizQuestions() }}
+            <button onClick={() => { fetchMemories(); fetchVisitors(); fetchQuizAttempts(); fetchQuizQuestions(); fetchCrosswordAttempts() }}
               className="px-4 py-2 rounded-xl bg-day-gold/20 text-accent-marigold border border-day-gold/50 hover:bg-day-gold/30 transition-colors text-sm font-semibold">
               🔄 Refresh
             </button>
@@ -406,6 +427,59 @@ export default function AdminPage() {
                         </tr>
                       )}
                     </>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* ── CROSSWORD RESULTS ── */}
+        <div className="bg-white rounded-2xl shadow-md border border-day-gold/20 mb-8 overflow-hidden">
+          <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+            <h2 className="font-semibold text-accent-marigold text-lg">🧩 Crossword Results</h2>
+            <span className="text-sm text-gray-500">{crosswordAttempts.length} attempts</span>
+          </div>
+
+          {crosswordAttempts.length === 0 ? (
+            <p className="text-gray-400 text-sm p-5">No crossword attempts yet.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                    <th className="text-left px-4 py-3">Guest</th>
+                    <th className="text-left px-4 py-3">Tag</th>
+                    <th className="text-left px-4 py-3">Status</th>
+                    <th className="text-left px-4 py-3">Time</th>
+                    <th className="text-left px-4 py-3">Score</th>
+                    <th className="text-left px-4 py-3">Started</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {crosswordAttempts.map(a => (
+                    <tr key={a.id} className="border-t border-gray-100 hover:bg-gray-50">
+                      <td className="px-4 py-3 font-medium text-gray-800">{a.guest_name}</td>
+                      <td className="px-4 py-3 text-gray-600">
+                        <span className="px-2 py-0.5 rounded text-xs bg-purple-100 text-purple-700">{a.tag}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        {a.status === 'completed' ? (
+                          <span className="px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">✅ Completed</span>
+                        ) : (
+                          <span className="px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">⏳ In progress</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">
+                        {a.elapsed_seconds != null
+                          ? `${Math.floor(a.elapsed_seconds / 60).toString().padStart(2, '0')}:${(a.elapsed_seconds % 60).toString().padStart(2, '0')}`
+                          : '—'}
+                      </td>
+                      <td className="px-4 py-3 font-bold text-gray-800">{a.score ?? '—'}</td>
+                      <td className="px-4 py-3 text-gray-400 text-xs">
+                        {new Date(a.started_at).toLocaleString()}
+                      </td>
+                    </tr>
                   ))}
                 </tbody>
               </table>
