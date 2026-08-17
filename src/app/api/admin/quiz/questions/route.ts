@@ -47,9 +47,20 @@ export async function PATCH(req: NextRequest) {
     if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
 
     const body = await req.json()
+    // Only send known-safe columns, no updated_at which may not exist
+    const { question, answers, correct_answer, difficulty, points, display_order, is_active } = body
+    const patch: Record<string, unknown> = {}
+    if (question !== undefined) patch.question = question
+    if (answers !== undefined) patch.answers = answers
+    if (correct_answer !== undefined) patch.correct_answer = correct_answer
+    if (difficulty !== undefined) patch.difficulty = difficulty
+    if (points !== undefined) patch.points = points
+    if (display_order !== undefined) patch.display_order = display_order
+    if (is_active !== undefined) patch.is_active = is_active
+
     const { data, error } = await admin
       .from('quiz_questions')
-      .update({ ...body, updated_at: new Date().toISOString() })
+      .update(patch)
       .eq('id', id)
       .select()
       .single()

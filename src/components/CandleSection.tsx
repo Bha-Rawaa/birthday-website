@@ -77,6 +77,7 @@ export default function CandleSection({ onBlown }: CandleSectionProps = {}) {
   const streamRef = useRef<MediaStream | null>(null)
   const rafRef = useRef<number>(0)
   const blowAudioRef = useRef<HTMLAudioElement | null>(null)
+  const hbdAudioRef = useRef<HTMLAudioElement | null>(null)
 
   const ageLabel = PERSON_AGE ? `${PERSON_AGE}th ` : ''
 
@@ -96,6 +97,11 @@ export default function CandleSection({ onBlown }: CandleSectionProps = {}) {
     }
 
     await fireConfetti()
+    // Play Happy Birthday song
+    if (hbdAudioRef.current) {
+      hbdAudioRef.current.volume = 0.7
+      hbdAudioRef.current.play().catch(() => {})
+    }
     onBlown?.()
   }, [stage, onBlown])
 
@@ -160,6 +166,7 @@ export default function CandleSection({ onBlown }: CandleSectionProps = {}) {
     <section className="relative py-20 px-4" style={{ background: 'transparent' }}>
       {/* invisible blow sound */}
       <audio ref={blowAudioRef} src="/blow-sound.mp3" preload="none" />
+      <audio ref={hbdAudioRef} src="/hbdcrowde.wav" preload="none" />
 
       <div className="max-w-2xl mx-auto text-center">
         <p style={{ fontSize: 11, letterSpacing: '0.3em', color: 'rgba(201,168,76,0.6)', textTransform: 'uppercase', marginBottom: 12 }}>

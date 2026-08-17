@@ -70,7 +70,7 @@ export default function MemoryForm({ visitorName, hasMemory = false, onMemorySub
     const start = textarea.selectionStart ?? message.length
     const end = textarea.selectionEnd ?? message.length
     const next = message.slice(0, start) + emojiData.emoji + message.slice(end)
-    if (next.length <= 300) {
+    if (next.length <= 3000) {
       setMessage(next)
       // restore cursor after state update
       requestAnimationFrame(() => {
@@ -85,7 +85,7 @@ export default function MemoryForm({ visitorName, hasMemory = false, onMemorySub
     e.preventDefault()
     if (!name.trim()) { setError('Please enter your name'); return }
     if (!message.trim() && !gifUrl) { setError('Please write a message or add a GIF'); return }
-    if (message.length > 300) { setError('Message must be under 300 characters'); return }
+    if (message.length > 3000) { setError('Message must be under 3000 characters'); return }
 
     setLoading(true)
     setError('')
@@ -251,7 +251,7 @@ export default function MemoryForm({ visitorName, hasMemory = false, onMemorySub
             <div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                 <label style={{ fontSize: 10, letterSpacing: '0.2em', color: 'rgba(201,168,76,0.55)', textTransform: 'uppercase' }}>
-                  Message &nbsp;<span style={{ opacity: 0.5, fontWeight: 400 }}>({message.length}/300)</span>
+                  Message &nbsp;<span style={{ opacity: 0.5, fontWeight: 400 }}>({message.length}/3000)</span>
                 </label>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <button type="button" onClick={() => { setShowEmoji(v => !v); setShowGif(false) }} style={{
@@ -272,7 +272,7 @@ export default function MemoryForm({ visitorName, hasMemory = false, onMemorySub
                 ref={textareaRef}
                 value={message}
                 onChange={e => setMessage(e.target.value)}
-                maxLength={300}
+                maxLength={3000}
                 rows={4}
                 placeholder="Write something heartfelt..."
                 style={{ ...inputStyle, resize: 'none' }}

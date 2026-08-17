@@ -21,6 +21,8 @@ const GIFS = [
   { src: 'https://media.giphy.com/media/S3Ot3hZ5bcy8o/giphy.gif',                                 emoji: '🥂', color: '#C9A84C', local: false },
   { src: 'https://media.giphy.com/media/26BRzozg4TCBXv6QU/giphy.gif',                             emoji: '🎆', color: '#E8856A', local: false },
   { src: 'https://media.giphy.com/media/ely3apij36BJhoZ234/giphy.gif',                            emoji: '🌟', color: '#9B7FCC', local: false },
+  { src: 'https://media.giphy.com/media/3o7abKhOpu0NwenH3O/giphy.gif',                            emoji: '🌟', color: '#9B7FCC', local: false },
+
 ]
 
 const CAPTIONS = [
