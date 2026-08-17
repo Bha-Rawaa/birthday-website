@@ -14,7 +14,7 @@ const FLOOR_H    = 440
 const AVATAR_SIZE = 80
 const HOST_SIZE   = 100
 
-const PRESET_AVATARS = ['🦁', '🦊', '🐱', '🐸', '🦄', '🐼', '🐙', '🦋', '🌸', '⭐']
+const PRESET_AVATARS = ['🦁', '🦒', '🦊', '🐱', '🐸', '🦄', '🐼', '🐙', '🦋', '🌸', '⭐']
 const COLORS = ['#C9A84C', '#9B7FCC', '#3BB4F4', '#E8856A', '#2ECC71', '#E91E63', '#FF9800', '#00BCD4']
 
 interface DancerRow {
