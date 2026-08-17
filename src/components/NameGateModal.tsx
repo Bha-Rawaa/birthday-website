@@ -4,6 +4,7 @@ import { useState, FormEvent, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 
 const PERSON_NAME = process.env.NEXT_PUBLIC_PERSON_NAME ?? 'the birthday star'
+const BYPASS_NAME = (process.env.NEXT_PUBLIC_BYPASS_NAME ?? 'admin').toLowerCase()
 
 interface Props {
   onSubmit: (name: string) => void
@@ -49,20 +50,26 @@ export default function NameGateModal({ onSubmit }: Props) {
     }
   }, [])
 
+  const isBypass = name.trim().toLowerCase() === BYPASS_NAME
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!name.trim()) { setError('Please enter your name'); return }
-    if (!word.trim()) { setError('Please enter one word'); return }
-    if (/\s/.test(word.trim())) { setError('Just one word, no spaces'); return }
+    if (!isBypass) {
+      if (!word.trim()) { setError('Please enter one word'); return }
+      if (/\s/.test(word.trim())) { setError('Just one word, no spaces'); return }
+    }
 
     setLoading(true)
     setError('')
 
     try {
-      await Promise.all([
-        supabase.from('one_word_tags').insert({ word: word.trim().toLowerCase() }),
-        supabase.from('visitors').insert({ name: name.trim() }),
-      ])
+      if (!isBypass) {
+        await Promise.all([
+          supabase.from('one_word_tags').insert({ word: word.trim().toLowerCase() }),
+          supabase.from('visitors').insert({ name: name.trim() }),
+        ])
+      }
       setPhase('celebrating')
       launchCelebrationFireworks()
       audioRef.current?.play().catch(() => {})
@@ -165,23 +172,25 @@ export default function NameGateModal({ onSubmit }: Props) {
               />
             </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: 10, letterSpacing: '0.2em', color: 'rgba(201,168,76,0.6)', textTransform: 'uppercase', marginBottom: 8 }}>
-                Leave one word that reminds you of {PERSON_NAME} 
-              </label>
-              <input
-                type="text"
-                value={word}
-                onChange={e => setWord(e.target.value.replace(/\s/g, '').toLowerCase())}
-                placeholder="e.g. radiant..."
-                maxLength={30}
-                style={{
-                  width: '100%', padding: '12px 16px', borderRadius: 10,
-                  border: '1px solid rgba(201,168,76,0.2)', background: 'rgba(255,255,255,0.04)',
-                  color: '#E8D5A3', fontSize: 15, outline: 'none', boxSizing: 'border-box',
-                }}
-              />
-            </div>
+            {!isBypass && (
+              <div>
+                <label style={{ display: 'block', fontSize: 10, letterSpacing: '0.2em', color: 'rgba(201,168,76,0.6)', textTransform: 'uppercase', marginBottom: 8 }}>
+                  Leave one word that reminds you of {PERSON_NAME}
+                </label>
+                <input
+                  type="text"
+                  value={word}
+                  onChange={e => setWord(e.target.value.replace(/\s/g, '').toLowerCase())}
+                  placeholder="e.g. radiant..."
+                  maxLength={30}
+                  style={{
+                    width: '100%', padding: '12px 16px', borderRadius: 10,
+                    border: '1px solid rgba(201,168,76,0.2)', background: 'rgba(255,255,255,0.04)',
+                    color: '#E8D5A3', fontSize: 15, outline: 'none', boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+            )}
 
             {error && (
               <p style={{ color: '#E8856A', fontSize: 13, textAlign: 'center', margin: 0 }}>{error}</p>

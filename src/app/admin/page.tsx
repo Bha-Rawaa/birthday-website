@@ -18,7 +18,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [visitorCount, setVisitorCount] = useState<number | null>(null)
-  const [recentVisitors, setRecentVisitors] = useState<{ id: string; name: string; entered_at: string }[]>([])
+  const [recentVisitors, setRecentVisitors] = useState<{ id: string; name: string; entered_at: string; word: string | null }[]>([])
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
@@ -137,9 +137,14 @@ export default function AdminPage() {
             <h2 className="font-semibold text-accent-marigold mb-4">🎉 Recent guests (last 10)</h2>
             <div className="flex flex-wrap gap-2">
               {recentVisitors.map(v => (
-                <span key={v.id} className="px-3 py-1 rounded-full bg-day-gold/10 text-accent-marigold text-sm border border-day-gold/20">
+                <span key={v.id} className="px-3 py-1 rounded-full bg-day-gold/10 text-accent-marigold text-sm border border-day-gold/20 flex items-center gap-1.5">
+                  {v.word && (
+                    <span className="px-2 py-0.5 rounded-full bg-accent-marigold/20 text-accent-marigold text-xs font-bold border border-accent-marigold/30">
+                      {v.word}
+                    </span>
+                  )}
                   {v.name}
-                  <span className="text-gray-400 text-xs ml-2">
+                  <span className="text-gray-400 text-xs ml-1">
                     {new Date(v.entered_at).toLocaleString()}
                   </span>
                 </span>
