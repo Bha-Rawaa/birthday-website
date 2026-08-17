@@ -10,6 +10,42 @@ interface AdminMemory extends Memory {
   signedUrl?: string
 }
 
+interface AdminAttempt {
+  id: string
+  guest_name: string
+  score: number
+  correct_answers: number
+  wrong_answers: number
+  started_at: string
+  completed_at: string | null
+  rank: number
+  qualified: boolean
+  isWinner: boolean
+}
+
+interface AttemptAnswer {
+  id: number
+  selected_answer: string
+  is_correct: boolean
+  points_earned: number
+  quiz_questions: {
+    id: number
+    question: string
+    correct_answer: string
+  } | null
+}
+
+interface QuizQuestionAdmin {
+  id: number
+  question: string
+  answers: string[]
+  correct_answer: string
+  difficulty: 'easy' | 'medium' | 'hard'
+  points: number
+  display_order: number
+  is_active: boolean
+}
+
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false)
   const [password, setPassword] = useState('')
@@ -19,6 +55,19 @@ export default function AdminPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [visitorCount, setVisitorCount] = useState<number | null>(null)
   const [recentVisitors, setRecentVisitors] = useState<{ id: string; name: string; entered_at: string; word: string | null }[]>([])
+
+  // Quiz state
+  const [quizAttempts, setQuizAttempts] = useState<AdminAttempt[]>([])
+  const [expandedAttempt, setExpandedAttempt] = useState<string | null>(null)
+  const [attemptDetails, setAttemptDetails] = useState<Record<string, AttemptAnswer[]>>({})
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestionAdmin[]>([])
+  const [editingQuestion, setEditingQuestion] = useState<Partial<QuizQuestionAdmin> | null>(null)
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [newQuestion, setNewQuestion] = useState<Partial<QuizQuestionAdmin>>({
+    question: '', answers: ['', '', '', ''], correct_answer: '', difficulty: 'easy', points: 1, display_order: 0, is_active: true,
+  })
+  const [quizDeleteConfirm, setQuizDeleteConfirm] = useState<number | null>(null)
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
@@ -44,10 +93,24 @@ export default function AdminPage() {
     setRecentVisitors((data.visitors ?? []).slice(0, 10))
   }
 
+  const fetchQuizAttempts = async () => {
+    const res = await fetch('/api/admin/quiz')
+    const data = await res.json()
+    setQuizAttempts(data.attempts || [])
+  }
+
+  const fetchQuizQuestions = async () => {
+    const res = await fetch('/api/admin/quiz/questions')
+    const data = await res.json()
+    setQuizQuestions(data.questions || [])
+  }
+
   useEffect(() => {
     if (authed) {
       fetchMemories()
       fetchVisitors()
+      fetchQuizAttempts()
+      fetchQuizQuestions()
     }
   }, [authed])
 
@@ -68,6 +131,49 @@ export default function AdminPage() {
 
   const downloadExport = () => {
     window.open('/api/admin/export', '_blank')
+  }
+
+  const loadAttemptDetails = async (id: string) => {
+    if (attemptDetails[id]) {
+      setExpandedAttempt(expandedAttempt === id ? null : id)
+      return
+    }
+    const res = await fetch(`/api/admin/quiz/attempt?id=${id}`)
+    const data = await res.json()
+    setAttemptDetails(prev => ({ ...prev, [id]: data.answers || [] }))
+    setExpandedAttempt(id)
+  }
+
+  const saveQuestion = async () => {
+    if (!editingQuestion || editingId === null) return
+    await fetch(`/api/admin/quiz/questions?id=${editingId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editingQuestion),
+    })
+    setEditingId(null)
+    setEditingQuestion(null)
+    fetchQuizQuestions()
+  }
+
+  const deleteQuestion = async (id: number) => {
+    await fetch(`/api/admin/quiz/questions?id=${id}`, { method: 'DELETE' })
+    setQuizQuestions(prev => prev.filter(q => q.id !== id))
+    setQuizDeleteConfirm(null)
+  }
+
+  const addQuestion = async () => {
+    const res = await fetch('/api/admin/quiz/questions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newQuestion),
+    })
+    const data = await res.json()
+    if (data.question) {
+      setQuizQuestions(prev => [...prev, data.question])
+      setShowAddForm(false)
+      setNewQuestion({ question: '', answers: ['', '', '', ''], correct_answer: '', difficulty: 'easy', points: 1, display_order: 0, is_active: true })
+    }
   }
 
   if (!authed) {
@@ -100,7 +206,7 @@ export default function AdminPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <h1 className="font-display text-4xl text-accent-marigold">🦁 {PERSON_NAME}&apos;s Admin Dashboard</h1>
           <div className="flex gap-3">
-            <button onClick={() => { fetchMemories(); fetchVisitors() }}
+            <button onClick={() => { fetchMemories(); fetchVisitors(); fetchQuizAttempts(); fetchQuizQuestions() }}
               className="px-4 py-2 rounded-xl bg-day-gold/20 text-accent-marigold border border-day-gold/50 hover:bg-day-gold/30 transition-colors text-sm font-semibold">
               🔄 Refresh
             </button>
@@ -158,7 +264,7 @@ export default function AdminPage() {
         {loading ? (
           <div className="text-center py-20 text-4xl animate-pulse">✨</div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-4 mb-12">
             {memories.map(memory => (
               <div key={memory.id}
                 className={`bg-white rounded-2xl p-5 shadow-md border-l-4 ${memory.is_public ? 'border-accent-marigold' : 'border-gray-400'}`}>
@@ -217,6 +323,288 @@ export default function AdminPage() {
             ))}
           </div>
         )}
+
+        {/* ── QUIZ RESULTS ── */}
+        <div className="bg-white rounded-2xl shadow-md border border-day-gold/20 mb-8 overflow-hidden">
+          <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+            <h2 className="font-semibold text-accent-marigold text-lg">🏆 Quiz Results</h2>
+            <span className="text-sm text-gray-500">{quizAttempts.length} completed</span>
+          </div>
+
+          {quizAttempts.length === 0 ? (
+            <p className="text-gray-400 text-sm p-5">No quiz attempts yet.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                    <th className="text-left px-4 py-3">Rank</th>
+                    <th className="text-left px-4 py-3">Guest</th>
+                    <th className="text-left px-4 py-3">Score</th>
+                    <th className="text-left px-4 py-3">Correct / Total</th>
+                    <th className="text-left px-4 py-3">Wrong</th>
+                    <th className="text-left px-4 py-3">Status</th>
+                    <th className="text-left px-4 py-3">Completed</th>
+                    <th className="px-4 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {quizAttempts.map(attempt => (
+                    <>
+                      <tr
+                        key={attempt.id}
+                        className="border-t border-gray-100 hover:bg-gray-50 cursor-pointer"
+                        onClick={() => loadAttemptDetails(attempt.id)}
+                      >
+                        <td className="px-4 py-3 font-bold text-accent-marigold">#{attempt.rank}</td>
+                        <td className="px-4 py-3 font-medium text-gray-800">{attempt.guest_name}</td>
+                        <td className="px-4 py-3 font-bold text-gray-800">{attempt.score}</td>
+                        <td className="px-4 py-3 text-gray-600">{attempt.correct_answers} / {attempt.correct_answers + attempt.wrong_answers}</td>
+                        <td className="px-4 py-3 text-gray-500">{attempt.wrong_answers}</td>
+                        <td className="px-4 py-3">
+                          {attempt.isWinner ? (
+                            <span className="px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">🏆 Winner</span>
+                          ) : attempt.qualified ? (
+                            <span className="px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">✅ Qualified</span>
+                          ) : (
+                            <span className="px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-gray-400 text-xs">
+                          {attempt.completed_at ? new Date(attempt.completed_at).toLocaleString() : '—'}
+                        </td>
+                        <td className="px-4 py-3 text-gray-400 text-xs">
+                          {expandedAttempt === attempt.id ? '▲' : '▼'}
+                        </td>
+                      </tr>
+                      {expandedAttempt === attempt.id && attemptDetails[attempt.id] && (
+                        <tr key={`${attempt.id}-detail`}>
+                          <td colSpan={8} className="bg-gray-50 px-4 py-4">
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="text-gray-400 uppercase tracking-wider">
+                                  <th className="text-left pb-2">Question</th>
+                                  <th className="text-left pb-2">Guest Answer</th>
+                                  <th className="text-left pb-2">Correct Answer</th>
+                                  <th className="text-left pb-2">Result</th>
+                                  <th className="text-left pb-2">Pts</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {attemptDetails[attempt.id].map(ans => (
+                                  <tr key={ans.id} className="border-t border-gray-200">
+                                    <td className="py-2 pr-4 text-gray-700 max-w-xs">{ans.quiz_questions?.question ?? '—'}</td>
+                                    <td className="py-2 pr-4 text-gray-600">{ans.selected_answer}</td>
+                                    <td className="py-2 pr-4 text-gray-500">{ans.quiz_questions?.correct_answer ?? '—'}</td>
+                                    <td className="py-2 pr-4">{ans.is_correct ? '✅' : '❌'}</td>
+                                    <td className="py-2 font-semibold text-accent-marigold">{ans.points_earned}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* ── QUIZ MANAGEMENT ── */}
+        <div className="bg-white rounded-2xl shadow-md border border-day-gold/20 overflow-hidden">
+          <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+            <h2 className="font-semibold text-accent-marigold text-lg">📝 Quiz Questions Management</h2>
+            <button
+              onClick={() => setShowAddForm(v => !v)}
+              className="px-4 py-2 rounded-xl bg-accent-marigold text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+            >
+              {showAddForm ? '✕ Cancel' : '+ Add Question'}
+            </button>
+          </div>
+
+          {/* Add form */}
+          {showAddForm && (
+            <div className="p-5 border-b border-gray-100 bg-amber-50">
+              <QuestionForm
+                data={newQuestion}
+                onChange={setNewQuestion}
+                onSave={addQuestion}
+                onCancel={() => setShowAddForm(false)}
+                saveLabel="Add Question"
+              />
+            </div>
+          )}
+
+          <div className="divide-y divide-gray-100">
+            {quizQuestions.map(q => (
+              <div key={q.id} className="p-4">
+                {editingId === q.id ? (
+                  <QuestionForm
+                    data={editingQuestion ?? q}
+                    onChange={setEditingQuestion}
+                    onSave={saveQuestion}
+                    onCancel={() => { setEditingId(null); setEditingQuestion(null) }}
+                    saveLabel="Save"
+                  />
+                ) : (
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="text-xs font-semibold text-gray-400">#{q.display_order}</span>
+                        <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                          q.difficulty === 'easy' ? 'bg-yellow-100 text-yellow-700' :
+                          q.difficulty === 'medium' ? 'bg-purple-100 text-purple-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>{q.difficulty}</span>
+                        <span className="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-500">{q.points}pt</span>
+                        {!q.is_active && <span className="px-2 py-0.5 rounded text-xs bg-red-100 text-red-500">inactive</span>}
+                      </div>
+                      <p className="font-medium text-gray-800 text-sm mb-2">{q.question}</p>
+                      <div className="flex flex-wrap gap-1">
+                        {q.answers.map((a, i) => (
+                          <span key={i} className={`px-2 py-0.5 rounded text-xs border ${a === q.correct_answer ? 'border-green-400 text-green-700 bg-green-50 font-semibold' : 'border-gray-200 text-gray-500'}`}>
+                            {a === q.correct_answer ? '✓ ' : ''}{a}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => { setEditingId(q.id); setEditingQuestion({ ...q }) }}
+                        className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-blue-200 text-blue-600 hover:bg-blue-50"
+                      >
+                        ✏️ Edit
+                      </button>
+                      {quizDeleteConfirm === q.id ? (
+                        <div className="flex gap-1">
+                          <button onClick={() => deleteQuestion(q.id)} className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-500 text-white hover:bg-red-600">Confirm</button>
+                          <button onClick={() => setQuizDeleteConfirm(null)} className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-300 text-gray-600">Cancel</button>
+                        </div>
+                      ) : (
+                        <button onClick={() => setQuizDeleteConfirm(q.id)} className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-red-200 text-red-500 hover:bg-red-50">🗑️</button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+            {quizQuestions.length === 0 && (
+              <p className="text-gray-400 text-sm p-5">No questions yet. Add some above!</p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Inline question editor ────────────────────────────────────────────────────
+function QuestionForm({
+  data,
+  onChange,
+  onSave,
+  onCancel,
+  saveLabel,
+}: {
+  data: Partial<QuizQuestionAdmin>
+  onChange: (d: Partial<QuizQuestionAdmin>) => void
+  onSave: () => void
+  onCancel: () => void
+  saveLabel: string
+}) {
+  const answers: string[] = (data.answers as string[]) ?? ['', '', '', '']
+
+  const setAnswer = (i: number, val: string) => {
+    const next = [...answers]
+    next[i] = val
+    onChange({ ...data, answers: next })
+  }
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <label className="block text-xs font-semibold text-gray-500 mb-1">Question</label>
+        <input
+          className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:border-accent-marigold"
+          value={data.question ?? ''}
+          onChange={e => onChange({ ...data, question: e.target.value })}
+          placeholder="Question text..."
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        {answers.map((a, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <input
+              type="radio"
+              name={`correct-${data.id ?? 'new'}`}
+              checked={data.correct_answer === a && a !== ''}
+              onChange={() => onChange({ ...data, correct_answer: a })}
+              title={`Mark answer ${i + 1} as correct`}
+            />
+            <input
+              className="flex-1 px-2 py-1.5 rounded border border-gray-200 text-xs focus:outline-none focus:border-green-400"
+              value={a}
+              onChange={e => setAnswer(i, e.target.value)}
+              placeholder={`Answer ${String.fromCharCode(65 + i)}...`}
+            />
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-gray-400">Select the radio button next to the correct answer.</p>
+
+      <div className="flex gap-3 flex-wrap">
+        <div>
+          <label className="block text-xs text-gray-500 mb-1">Difficulty</label>
+          <select
+            className="px-2 py-1.5 rounded border border-gray-200 text-xs focus:outline-none"
+            value={data.difficulty ?? 'easy'}
+            onChange={e => onChange({ ...data, difficulty: e.target.value as 'easy' | 'medium' | 'hard' })}
+          >
+            <option value="easy">Easy (1pt)</option>
+            <option value="medium">Medium (2pt)</option>
+            <option value="hard">Hard (3pt)</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs text-gray-500 mb-1">Points</label>
+          <input
+            type="number" min={1} max={5}
+            className="w-16 px-2 py-1.5 rounded border border-gray-200 text-xs focus:outline-none"
+            value={data.points ?? 1}
+            onChange={e => onChange({ ...data, points: Number(e.target.value) })}
+          />
+        </div>
+        <div>
+          <label className="block text-xs text-gray-500 mb-1">Order</label>
+          <input
+            type="number" min={0}
+            className="w-16 px-2 py-1.5 rounded border border-gray-200 text-xs focus:outline-none"
+            value={data.display_order ?? 0}
+            onChange={e => onChange({ ...data, display_order: Number(e.target.value) })}
+          />
+        </div>
+        <div className="flex items-end gap-1">
+          <label className="text-xs text-gray-500 mb-1.5">Active</label>
+          <input
+            type="checkbox"
+            className="mb-2"
+            checked={data.is_active ?? true}
+            onChange={e => onChange({ ...data, is_active: e.target.checked })}
+          />
+        </div>
+      </div>
+
+      <div className="flex gap-2">
+        <button onClick={onSave} className="px-4 py-2 rounded-lg bg-accent-marigold text-white text-sm font-semibold hover:opacity-90">
+          {saveLabel}
+        </button>
+        <button onClick={onCancel} className="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 text-sm hover:bg-gray-50">
+          Cancel
+        </button>
       </div>
     </div>
   )

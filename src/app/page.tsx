@@ -10,6 +10,7 @@ import CakeCuttingSection from '@/components/CakeCuttingSection'
 import DanceSection from '@/components/DanceSection'
 import ScatteredGifs from '@/components/ScatteredGifs'
 import MemoryWall from '@/components/MemoryWall'
+import QuizSection from '@/components/QuizSection'
 import WordCloud from '@/components/WordCloud'
 import FireworksFinale from '@/components/FireworksFinale'
 import ClosingGifs from '@/components/ClosingGifs'
@@ -64,6 +65,7 @@ export default function Home() {
           <DanceSection visitorName={visitorName} />
           <ScatteredGifs slot={3} />
           <MemoryWall refreshTrigger={memoryRefreshTrigger} />
+          <QuizSection visitorName={visitorName} />
           <WordCloud />
           <FireworksFinale />
           {/* <ClosingGifs /> */}
